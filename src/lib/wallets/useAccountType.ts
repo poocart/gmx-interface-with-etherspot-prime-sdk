@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWeb3React } from "@web3-react/core";
+import { useWalletAddress } from "@etherspot/transaction-kit";
 
 export enum AccountType {
   CONTRACT = "contract",
@@ -7,8 +8,9 @@ export enum AccountType {
 }
 
 export default function useAccountType() {
-  const { active, account, library } = useWeb3React();
+  const { active, library } = useWeb3React();
   const [contractType, setContractType] = useState<AccountType | null>(null);
+  const account = useWalletAddress("etherspot-prime", 80001);
 
   useEffect(() => {
     if (!active) return;

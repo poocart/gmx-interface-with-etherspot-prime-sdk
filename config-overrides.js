@@ -19,6 +19,8 @@ module.exports = function override(config) {
     https: false,
     stream: false,
     crypto: false,
+    assert: false,
+    path : false,
   };
   config.plugins = (config.plugins || []).concat([
     new webpack.ProvidePlugin({

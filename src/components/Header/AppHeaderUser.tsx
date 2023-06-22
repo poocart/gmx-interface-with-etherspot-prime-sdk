@@ -16,6 +16,7 @@ import { switchNetwork } from "lib/wallets";
 import { useChainId } from "lib/chains";
 import { isDevelopment } from "config/env";
 import { getIcon } from "config/icons";
+import { useWalletAddress } from "@etherspot/transaction-kit";
 
 type Props = {
   openSettings: () => void;
@@ -65,7 +66,8 @@ export function AppHeaderUser({
   showRedirectModal,
 }: Props) {
   const { chainId } = useChainId();
-  const { active, account } = useWeb3React();
+  const { active } = useWeb3React();
+  const accountAddress = useWalletAddress("etherspot-prime", 80001);
   const showConnectionOptions = !isHomeSite();
 
   useEffect(() => {
@@ -86,7 +88,7 @@ export function AppHeaderUser({
 
   const selectorLabel = getChainName(chainId);
 
-  if (!active || !account) {
+  if (!active || !accountAddress) {
     return (
       <div className="App-header-user">
         <div className={cx("App-header-trade-link", { "homepage-header": isHomeSite() })}>
@@ -120,7 +122,7 @@ export function AppHeaderUser({
     );
   }
 
-  const accountUrl = getAccountUrl(chainId, account);
+  const accountUrl = getAccountUrl(chainId, accountAddress);
 
   return (
     <div className="App-header-user">
@@ -139,7 +141,7 @@ export function AppHeaderUser({
         <>
           <div className="App-header-user-address">
             <AddressDropdown
-              account={account}
+              account={accountAddress}
               accountUrl={accountUrl}
               disconnectAccountAndCloseSettings={disconnectAccountAndCloseSettings}
             />

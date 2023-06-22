@@ -53,6 +53,7 @@ import { getToken, getTokenBySymbol, getTokens, getWhitelistedTokens } from "con
 import { useChainId } from "lib/chains";
 import ExternalLink from "components/ExternalLink/ExternalLink";
 import UsefulLinks from "components/Exchange/UsefulLinks";
+import { useWalletAddress } from "@etherspot/transaction-kit";
 const { AddressZero } = ethers.constants;
 
 const PENDING_POSITION_VALID_DURATION = 600 * 1000;
@@ -381,7 +382,8 @@ export const Exchange = forwardRef((props, ref) => {
     }
   }, [showBanner, bannerHidden, setBannerHidden, setShowBanner]);
 
-  const { active, account, library } = useWeb3React();
+  const { active, library } = useWeb3React();
+  const account = useWalletAddress("etherspot-prime", 80001);
   const { chainId } = useChainId();
   const currentAccount = account;
 
@@ -743,37 +745,41 @@ export const Exchange = forwardRef((props, ref) => {
     ]
   );
 
-  const approveOrderBook = () => {
-    setIsPluginApproving(true);
+  const approveOrderBook = async (readOnly = false) => {
+    if (!readOnly) setIsPluginApproving(true);
     return approvePlugin(chainId, orderBookAddress, {
       library,
       pendingTxns,
       setPendingTxns,
       sentMsg: t`Enable orders sent.`,
       failMsg: t`Enable orders failed.`,
+      readOnly,
     })
-      .then(() => {
+      .then((result) => {
+        if (readOnly) return result;
         setIsWaitingForPluginApproval(true);
       })
       .finally(() => {
-        setIsPluginApproving(false);
+        if (!readOnly) setIsPluginApproving(false);
       });
   };
 
-  const approvePositionRouter = ({ sentMsg, failMsg }) => {
-    setIsPositionRouterApproving(true);
+  const approvePositionRouter = async ({ sentMsg, failMsg, readOnly }) => {
+    if (!readOnly) setIsPositionRouterApproving(true);
     return approvePlugin(chainId, positionRouterAddress, {
       library,
       pendingTxns,
       setPendingTxns,
       sentMsg,
       failMsg,
+      readOnly,
     })
-      .then(() => {
+      .then((result) => {
+        if (readOnly) return result;
         setIsWaitingForPositionRouterApproval(true);
       })
       .finally(() => {
-        setIsPositionRouterApproving(false);
+        if (!readOnly) setIsPositionRouterApproving(false);
       });
   };
   const POSITIONS = "Positions";

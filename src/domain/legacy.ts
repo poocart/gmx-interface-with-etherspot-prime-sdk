@@ -658,13 +658,14 @@ function useGmxPriceFromArbitrum(library, active) {
   return { data: gmxPrice, mutate };
 }
 
-export async function approvePlugin(chainId, pluginAddress, { library, setPendingTxns, sentMsg, failMsg }) {
+export async function approvePlugin(chainId, pluginAddress, { library, setPendingTxns, sentMsg, failMsg, readOnly }) {
   const routerAddress = getContract(chainId, "Router");
   const contract = new ethers.Contract(routerAddress, Router.abi, library.getSigner());
   return callContract(chainId, contract, "approvePlugin", [pluginAddress], {
     sentMsg,
     failMsg,
     setPendingTxns,
+    readOnly,
   });
 }
 
@@ -830,7 +831,7 @@ export function handleCancelOrder(chainId, library, order, opts) {
   });
 }
 
-export async function cancelMultipleOrders(chainId, library, allIndexes = [], opts) {
+export async function cancelMultipleOrders(chainId, library, allIndexes: any[] = [], opts) {
   const ordersWithTypes = groupBy(allIndexes, (v) => v.split("-")[0]);
   function getIndexes(key) {
     if (!ordersWithTypes[key]) return;

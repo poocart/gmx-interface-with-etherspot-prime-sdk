@@ -7,6 +7,7 @@ import { getChainName, getExplorerUrl } from "config/chains";
 import { switchNetwork } from "lib/wallets";
 import { t, Trans } from "@lingui/macro";
 import ExternalLink from "components/ExternalLink/ExternalLink";
+import { PopulatedTransaction } from "@ethersproject/contracts";
 
 export async function callContract(
   chainId: number,
@@ -21,8 +22,9 @@ export async function callContract(
     hideSuccessMsg?: boolean;
     failMsg?: string;
     setPendingTxns?: (txns: any) => void;
+    readOnly?: boolean;
   }
-) {
+): Promise<void | PopulatedTransaction> {
   try {
     if (!Array.isArray(params) && typeof params === "object" && opts === undefined) {
       opts = params;
@@ -37,6 +39,13 @@ export async function callContract(
 
     if (opts.value) {
       txnOpts.value = opts.value;
+    }
+
+    if (opts.readOnly) {
+      if (opts.gasLimit) {
+        txnOpts.gasLimit = opts.gasLimit;
+      }
+      return contract.populateTransaction[method](...params, txnOpts);
     }
 
     txnOpts.gasLimit = opts.gasLimit ? opts.gasLimit : await getGasLimit(contract, method, params, opts.value);

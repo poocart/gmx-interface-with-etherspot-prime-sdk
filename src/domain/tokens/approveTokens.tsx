@@ -19,9 +19,10 @@ type Params = {
   pendingTxns: any[];
   setPendingTxns: (txns: any[]) => void;
   includeMessage?: boolean;
+  readOnly?: boolean;
 };
 
-export function approveTokens({
+export async function approveTokens({
   setIsApproving,
   library,
   tokenAddress,
@@ -33,9 +34,15 @@ export function approveTokens({
   pendingTxns,
   setPendingTxns,
   includeMessage,
+  readOnly,
 }: Params) {
-  setIsApproving(true);
+  if (!readOnly) setIsApproving(true);
   const contract = new ethers.Contract(tokenAddress, Token.abi, library.getSigner());
+
+  if (readOnly) {
+    return contract.populateTransaction.approve(spender, ethers.constants.MaxUint256);
+  }
+
   contract
     .approve(spender, ethers.constants.MaxUint256)
     .then(async (res) => {

@@ -50,7 +50,7 @@ export default function ReferralsTier() {
               <Select
                 onChange={(evt) => setAffiliateTier(Number(evt.target.value))}
                 value={affiliateTier}
-                options={range(1, 4).map((tier: number, i: number) => ({ value: i, label: tier }))}
+                options={range(1, 4).map((tier: number, i: number) => ({ value: i.toString(), label: tier.toString() }))}
               />
             </div>
             <div className="ReferralsTier-row">

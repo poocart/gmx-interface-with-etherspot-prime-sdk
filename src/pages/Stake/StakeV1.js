@@ -27,6 +27,7 @@ import { bigNumberify, expandDecimals, formatAmount, formatAmountFree, formatKey
 import { getTokenBySymbol } from "config/tokens";
 import { useChainId } from "lib/chains";
 import ExternalLink from "components/ExternalLink/ExternalLink";
+import { useWalletAddress } from "@etherspot/transaction-kit";
 
 const BASIS_POINTS_DIVISOR = 10000;
 const HOURS_PER_YEAR = 8760;
@@ -549,7 +550,8 @@ export default function StakeV1() {
   const [unstakeValue, setUnstakeValue] = useState("");
   const [unstakingFarmAddress, setUnstakingFarmAddress] = useState("");
 
-  const { activate, active, account, library, deactivate } = useWeb3React();
+  const { activate, active, library, deactivate } = useWeb3React();
+  const account = useWalletAddress("etherspot-prime", 80001);
   const connectWallet = getInjectedHandler(activate, deactivate);
 
   const readerAddress = getContract(CHAIN_ID, "Reader");

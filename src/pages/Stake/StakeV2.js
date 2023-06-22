@@ -51,6 +51,7 @@ import GMXAprTooltip from "components/Stake/GMXAprTooltip";
 import Button from "components/Button/Button";
 import TooltipWithPortal from "components/Tooltip/TooltipWithPortal";
 import BuyInputSection from "components/BuyInputSection/BuyInputSection";
+import { useWalletAddress } from "@etherspot/transaction-kit";
 
 const { AddressZero } = ethers.constants;
 
@@ -872,7 +873,8 @@ function ClaimModal(props) {
 }
 
 export default function StakeV2({ setPendingTxns, connectWallet }) {
-  const { active, library, account } = useWeb3React();
+  const { active, library } = useWeb3React();
+  const account = useWalletAddress("etherspot-prime", 80001);
   const { chainId } = useChainId();
 
   const chainName = getChainName(chainId);

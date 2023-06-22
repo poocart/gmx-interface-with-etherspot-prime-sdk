@@ -3,6 +3,7 @@ import { Trans, t } from "@lingui/macro";
 import cx from "classnames";
 import { getCodeError, getReferralCodeTakenStatus, getSampleReferrarStat } from "./referralsHelper";
 import { useWeb3React } from "@web3-react/core";
+import { useWalletAddress } from "@etherspot/transaction-kit";
 import { ARBITRUM } from "config/chains";
 import { helperToast } from "lib/helperToast";
 import { useDebounce } from "lib/useDebounce";
@@ -54,7 +55,9 @@ export function AffiliateCodeForm({
   const inputRef = useRef("");
   const [referralCodeCheckStatus, setReferralCodeCheckStatus] = useState("ok");
   const debouncedReferralCode = useDebounce(referralCode, 300);
-  const { account, chainId } = useWeb3React();
+  const { chainId } = useWeb3React();
+  const account = useWalletAddress("etherspot-prime", 80001);
+
   useEffect(() => {
     inputRef.current.focus();
   }, []);

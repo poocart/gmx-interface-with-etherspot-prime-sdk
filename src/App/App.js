@@ -4,6 +4,10 @@ import { ethers } from "ethers";
 import { Web3ReactProvider, useWeb3React } from "@web3-react/core";
 import { Web3Provider } from "@ethersproject/providers";
 import useScrollToTop from "lib/useScrollToTop";
+import {
+  EtherspotTransactionKit,
+  useEtherspot
+} from "@etherspot/transaction-kit";
 
 import { Switch, Route, HashRouter as Router, Redirect, useLocation, useHistory } from "react-router-dom";
 
@@ -159,6 +163,14 @@ function FullApp() {
   useHandleUnsupportedNetwork();
 
   const query = useRouteQuery();
+
+  const {
+    connect: connectEtherspot
+  } = useEtherspot();
+
+  useEffect(() => {
+    connectEtherspot();
+  }, [connectEtherspot, library]);
 
   useEffect(() => {
     let referralCode = query.get(REFERRAL_CODE_QUERY_PARAM);
@@ -655,6 +667,15 @@ function FullApp() {
   );
 }
 
+function EtherspotProvider({ children }) {
+  const { library } = useWeb3React();
+  return (
+    <EtherspotTransactionKit chainId={80001} provider={library?.provider}>
+      {children}
+    </EtherspotTransactionKit>
+  )
+}
+
 function App() {
   useScrollToTop();
   useEffect(() => {
@@ -664,13 +685,15 @@ function App() {
   return (
     <SWRConfig value={{ refreshInterval: 5000 }}>
       <Web3ReactProvider getLibrary={getLibrary}>
-        <SEO>
-          <Router>
-            <I18nProvider i18n={i18n}>
-              <FullApp />
-            </I18nProvider>
-          </Router>
-        </SEO>
+        <EtherspotProvider>
+          <SEO>
+            <Router>
+              <I18nProvider i18n={i18n}>
+                <FullApp />
+              </I18nProvider>
+            </Router>
+          </SEO>
+        </EtherspotProvider>
       </Web3ReactProvider>
     </SWRConfig>
   );

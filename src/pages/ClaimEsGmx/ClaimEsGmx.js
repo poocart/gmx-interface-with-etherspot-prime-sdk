@@ -23,6 +23,7 @@ import { bigNumberify, formatAmount, formatAmountFree, parseValue } from "lib/nu
 import { useChainId } from "lib/chains";
 import ExternalLink from "components/ExternalLink/ExternalLink";
 import Button from "components/Button/Button";
+import { useWalletAddress } from "@etherspot/transaction-kit";
 
 const VEST_WITH_GMX_ARB = "VEST_WITH_GMX_ARB";
 const VEST_WITH_GLP_ARB = "VEST_WITH_GLP_ARB";
@@ -127,7 +128,8 @@ function getVestingValues({ minRatio, amount, vestingDataItem }) {
 }
 
 export default function ClaimEsGmx({ setPendingTxns }) {
-  const { active, account, library } = useWeb3React();
+  const { active, library } = useWeb3React();
+  const account = useWalletAddress("etherspot-prime", 80001);
   const { chainId } = useChainId();
   const [selectedOption, setSelectedOption] = useState("");
   const [isClaiming, setIsClaiming] = useState(false);
