@@ -110,7 +110,7 @@ export default function GlpSwap(props) {
   const swapLabel = isBuying ? "BuyGlp" : "SellGlp";
   const tabLabel = isBuying ? t`Buy GLP` : t`Sell GLP`;
   const { active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
   const { chainId } = useChainId();
   const tokens = getTokens(chainId);
   const whitelistedTokens = getWhitelistedTokens(chainId);

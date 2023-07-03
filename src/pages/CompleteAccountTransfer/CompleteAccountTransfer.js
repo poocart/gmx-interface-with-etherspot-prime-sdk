@@ -25,7 +25,7 @@ export default function CompleteAccountTransfer(props) {
   const { sender, receiver } = useParams();
   const { setPendingTxns } = props;
   const { library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
   const [isTransferSubmittedModalVisible, setIsTransferSubmittedModalVisible] = useState(false);
 
   const { chainId } = useChainId();

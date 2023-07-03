@@ -383,7 +383,7 @@ export const Exchange = forwardRef((props, ref) => {
   }, [showBanner, bannerHidden, setBannerHidden, setShowBanner]);
 
   const { active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
   const { chainId } = useChainId();
   const currentAccount = account;
 
@@ -745,7 +745,7 @@ export const Exchange = forwardRef((props, ref) => {
     ]
   );
 
-  const approveOrderBook = async (readOnly = false) => {
+  const approveOrderBook = async ({ readOnly = false }) => {
     if (!readOnly) setIsPluginApproving(true);
     return approvePlugin(chainId, orderBookAddress, {
       library,

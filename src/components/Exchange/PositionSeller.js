@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import cx from "classnames";
 import { Trans, t } from "@lingui/macro";
 import { BsArrowRight } from "react-icons/bs";
+import { useEtherspotTransactions } from "@etherspot/transaction-kit";
 
 import {
   DEFAULT_SLIPPAGE_AMOUNT,
@@ -55,6 +56,8 @@ import FeesTooltip from "./FeesTooltip";
 import Button from "components/Button/Button";
 import ToggleSwitch from "components/ToggleSwitch/ToggleSwitch";
 import SlippageInput from "components/SlippageInput/SlippageInput";
+import { isEtherspot } from "config/env";
+import { helperToast } from "../../lib/helperToast";
 
 const { AddressZero } = ethers.constants;
 const ORDER_SIZE_DUST_USD = expandDecimals(1, USD_DECIMALS - 1); // $0.10
@@ -154,6 +157,7 @@ export default function PositionSeller(props) {
     usdgSupply,
     totalTokenWeights,
     isContractAccount,
+    approveOrderBook,
   } = props;
   const [savedSlippageAmount] = useLocalStorageSerializeKey([chainId, SLIPPAGE_BPS_KEY], DEFAULT_SLIPPAGE_AMOUNT);
   const [keepLeverage, setKeepLeverage] = useLocalStorageSerializeKey([chainId, "Exchange-keep-leverage"], true);
@@ -163,6 +167,7 @@ export default function PositionSeller(props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const prevIsVisible = usePrevious(isVisible);
   const [allowedSlippage, setAllowedSlippage] = useState(savedSlippageAmount);
+  const { getEtherspotPrimeSdkForChainId } = useEtherspotTransactions();
 
   useEffect(() => {
     setAllowedSlippage(savedSlippageAmount);
@@ -633,37 +638,40 @@ export default function PositionSeller(props) {
       return error;
     }
 
-    if (orderOption === STOP) {
-      if (isSubmitting) return t`Creating Order...`;
+    if (!isEtherspot) {
+      if (orderOption === STOP) {
+        if (isSubmitting) return t`Creating Order...`;
 
-      if (needOrderBookApproval && isWaitingForPluginApproval) {
-        return t`Enabling Orders...`;
+        if (needOrderBookApproval && isWaitingForPluginApproval) {
+          return t`Enabling Orders...`;
+        }
+        if (isPluginApproving) {
+          return t`Enabling Orders...`;
+        }
+        if (needOrderBookApproval) {
+          return t`Enable Orders`;
+        }
+
+        return t`Create Order`;
       }
-      if (isPluginApproving) {
-        return t`Enabling Orders...`;
-      }
-      if (needOrderBookApproval) {
-        return t`Enable Orders`;
+
+      if (needPositionRouterApproval && isWaitingForPositionRouterApproval) {
+        return t`Enabling Leverage...`;
       }
 
-      return t`Create Order`;
-    }
+      if (isPositionRouterApproving) {
+        return t`Enabling Leverage...`;
+      }
 
-    if (needPositionRouterApproval && isWaitingForPositionRouterApproval) {
-      return t`Enabling Leverage...`;
-    }
-
-    if (isPositionRouterApproving) {
-      return t`Enabling Leverage...`;
-    }
-
-    if (needPositionRouterApproval) {
-      return t`Enable Leverage`;
+      if (needPositionRouterApproval) {
+        return t`Enable Leverage`;
+      }
     }
 
     if (hasPendingProfit) {
       return t`Close without profit`;
     }
+
     return isSubmitting ? t`Closing...` : t`Close`;
   };
 
@@ -713,20 +721,53 @@ export default function PositionSeller(props) {
   }, [receiveSpreadInfo]);
 
   const onClickPrimary = async () => {
+    let etherspotPrimeSdk;
+
+    if (isEtherspot) {
+      etherspotPrimeSdk = await getEtherspotPrimeSdkForChainId(42161);
+
+      if (!etherspotPrimeSdk) {
+        helperToast.error(t`No Etherspot Prime SDK found for chainId 42161`);
+        return;
+      }
+
+      await etherspotPrimeSdk.clearUserOpsFromBatch();
+    }
+
+    const transactions = [];
+
     if (needOrderBookApproval) {
-      setOrdersToaOpen(true);
+      if (!isEtherspot) {
+        setOrdersToaOpen(true);
+        return;
+      }
+      const approvalTransaction = await approveOrderBook({ readOnly: isEtherspot });
+      transactions.push(approvalTransaction);
       return;
     }
 
+
     if (needPositionRouterApproval) {
-      approvePositionRouter({
+      const approvalTransaction = await approvePositionRouter({
         sentMsg: t`Enable leverage sent.`,
         failMsg: t`Enable leverage failed.`,
+        readOnly: isEtherspot,
       });
-      return;
+      if (!isEtherspot) return;
+      transactions.push(approvalTransaction);
     }
 
     setIsSubmitting(true);
+
+    if (isEtherspot) {
+      await Promise.all(transactions.map(async (transaction) => {
+        await etherspotPrimeSdk.addUserOpsToBatch({
+          value: transaction.value,
+          data: transaction.data,
+          to: transaction.to,
+        });
+      }));
+    }
 
     const collateralTokenAddress = position.collateralToken.isNative
       ? nativeTokenAddress
@@ -812,7 +853,23 @@ export default function PositionSeller(props) {
 
     const contract = new ethers.Contract(positionRouterAddress, PositionRouter.abi, library.getSigner());
 
-    callContract(chainId, contract, "createDecreasePosition", params, {
+    const onTransactionSent = () => {
+      setFromValue("");
+      setIsVisible(false);
+
+      let nextSize = position.size.sub(sizeDelta);
+
+      pendingPositions[position.key] = {
+        updatedAt: Date.now(),
+        pendingChanges: {
+          size: nextSize,
+        },
+      };
+
+      setPendingPositions({ ...pendingPositions });
+    };
+
+    const transaction = await callContract(chainId, contract, "createDecreasePosition", params, {
       value: minExecutionFee,
       sentMsg: t`Close submitted!`,
       successMsg,
@@ -821,25 +878,32 @@ export default function PositionSeller(props) {
       // for Arbitrum, sometimes the successMsg shows after the position has already been executed
       // hide the success message for Arbitrum as a workaround
       hideSuccessMsg: chainId === ARBITRUM,
+      readOnly: isEtherspot,
     })
-      .then(async (res) => {
-        setFromValue("");
-        setIsVisible(false);
-
-        let nextSize = position.size.sub(sizeDelta);
-
-        pendingPositions[position.key] = {
-          updatedAt: Date.now(),
-          pendingChanges: {
-            size: nextSize,
-          },
-        };
-
-        setPendingPositions({ ...pendingPositions });
+      .then((result) => {
+        if (isEtherspot) return result;
+        onTransactionSent();
       })
       .finally(() => {
+        if (!isEtherspot) return;
         setIsSubmitting(false);
       });
+
+    await etherspotPrimeSdk.addUserOpsToBatch({
+      value: transaction.value,
+      data: transaction.data,
+      to: transaction.to,
+    });
+
+    try {
+      const userOpSigned = await etherspotPrimeSdk.sign();
+      await etherspotPrimeSdk.send(userOpSigned);
+      onTransactionSent();
+    } catch (e) {
+      console.warn('Etherspot Prime SDK error: ', e)
+    }
+
+    setIsSubmitting(false);
   };
 
   const renderExistingOrderWarning = useCallback(() => {

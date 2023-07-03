@@ -67,7 +67,7 @@ export function AppHeaderUser({
 }: Props) {
   const { chainId } = useChainId();
   const { active } = useWeb3React();
-  const accountAddress = useWalletAddress("etherspot-prime", 80001);
+  const accountAddress = useWalletAddress("etherspot-prime");
   const showConnectionOptions = !isHomeSite();
 
   useEffect(() => {

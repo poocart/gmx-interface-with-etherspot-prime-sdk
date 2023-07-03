@@ -318,7 +318,7 @@ export default function Migration() {
   const [migrationValue, setMigrationValue] = useState("");
 
   const { connector, activate, active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
   const [activatingConnector, setActivatingConnector] = useState();
   useEffect(() => {
     if (activatingConnector && activatingConnector === connector) {

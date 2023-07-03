@@ -30,7 +30,7 @@ const TAB_OPTIONS = [TRADERS, AFFILIATES];
 
 function Referrals({ connectWallet, setPendingTxns, pendingTxns }) {
   const { active, library } = useWeb3React();
-  const walletAccount = useWalletAddress("etherspot-prime", 80001);
+  const walletAccount = useWalletAddress("etherspot-prime");
   const { account: queryAccount } = useParams();
   let account;
   if (queryAccount && ethers.utils.isAddress(queryAccount)) {

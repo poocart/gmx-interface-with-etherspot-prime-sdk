@@ -2834,9 +2834,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@etherspot/prime-sdk@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@etherspot/prime-sdk@npm:1.0.0"
+"@etherspot/prime-sdk@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@etherspot/prime-sdk@npm:1.0.1"
   dependencies:
     "@thehubbleproject/bls": 0.5.1
     axios: 1.3.4
@@ -2846,26 +2846,26 @@ __metadata:
     ethers: 5.7.0
     prettier: ^2.8.8
     reflect-metadata: 0.1.13
-  checksum: 76e4073e15c016aec9b00c03a2ea42a12a27a8d30693a996845734cf44b1633024e5b2ed45f06cd1e3ab5c286210b8956f356dc5d4582b0a68be7866e9f3318d
+  checksum: 779205f94450807a13b4f933a62bfcadcd00583d73b6c8170bc408d7f11ca62864497bcddc5bdf7149bd35e91d61b2488035f368f9fbf2966518b0c60f05f6ae
   languageName: node
   linkType: hard
 
-"@etherspot/react-etherspot@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@etherspot/react-etherspot@npm:1.1.0"
+"@etherspot/react-etherspot@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@etherspot/react-etherspot@npm:1.1.1"
   peerDependencies:
     react: ">=16.0.0"
-  checksum: 2fe59d08850b752322421776d68c18d24c84b927961961efafdc1ab28d32e64d0396e3ead49335a999adbf0a34a7c5797c41fea89fd73702cd92fbc0dd7ba770
+  checksum: 3f7b3df11bf16bafc48097a3d209c5195e29ecb8531609edd74fe66f3a7dc28a68afd5c08b8d6e3cd7721eeeac6d9d5094f81386bfa013dfe09146174d6aff63
   languageName: node
   linkType: hard
 
-"@etherspot/transaction-kit@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "@etherspot/transaction-kit@npm:0.4.0"
+"@etherspot/transaction-kit@npm:^0.4.1":
+  version: 0.4.1
+  resolution: "@etherspot/transaction-kit@npm:0.4.1"
   dependencies:
     "@etherspot/eip1271-verification-util": ^0.1.2
-    "@etherspot/prime-sdk": ^1.0.0
-    "@etherspot/react-etherspot": ^1.1.0
+    "@etherspot/prime-sdk": ^1.0.1
+    "@etherspot/react-etherspot": ^1.1.1
     buffer: ^6.0.3
     ethereumjs-util: ^7.1.5
     ethers: ^5.6.9
@@ -2876,7 +2876,7 @@ __metadata:
     rxjs: ^6.6.7
   peerDependencies:
     react: ">=18.2.0"
-  checksum: 4e9705933a7667c60b16927388349934dfc2af19547a526d4f969aad18a1675297e5142f553318f3b21630fe3a728e1e03ae69310a41d5285addc974b75fce93
+  checksum: ab84c6cec7095ff32f204eb1d3a9cbad347d932deb5569b0db7e0e7689f120b0337dcf602579f8fd4ce04126835cf215adc50a4cb92eba9b19f26efa6b9d57ba
   languageName: node
   linkType: hard
 
@@ -10784,7 +10784,7 @@ __metadata:
   dependencies:
     "@apollo/client": 3.5.6
     "@davatar/react": 1.8.1
-    "@etherspot/transaction-kit": ^0.4.0
+    "@etherspot/transaction-kit": ^0.4.1
     "@ethersproject/providers": 5.5.1
     "@ethersproject/units": 5.5.0
     "@headlessui/react": 1.6.1

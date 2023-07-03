@@ -30,7 +30,7 @@ import { useWalletAddress } from "@etherspot/transaction-kit";
 export default function OrdersOverview() {
   const { chainId } = useChainId();
   const { library, active } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
 
   const nativeTokenAddress = getContract(chainId, "NATIVE_TOKEN");
 

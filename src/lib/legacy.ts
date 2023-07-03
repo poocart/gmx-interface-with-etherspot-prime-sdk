@@ -1041,7 +1041,7 @@ export function getOrderKey(order) {
 
 export function useAccountOrders(flagOrdersEnabled, overrideAccount) {
   const { library } = useWeb3React();
-  const connectedAccount = useWalletAddress("etherspot-prime", 80001);
+  const connectedAccount = useWalletAddress("etherspot-prime");
   const active = true; // this is used in Actions.js so set active to always be true
   const account = overrideAccount || connectedAccount;
 

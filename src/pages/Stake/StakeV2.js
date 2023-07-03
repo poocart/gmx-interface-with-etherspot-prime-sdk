@@ -874,7 +874,7 @@ function ClaimModal(props) {
 
 export default function StakeV2({ setPendingTxns, connectWallet }) {
   const { active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
   const { chainId } = useChainId();
 
   const chainName = getChainName(chainId);

@@ -40,7 +40,7 @@ function ValidationRow({ isValid, children }) {
 export default function BeginAccountTransfer(props) {
   const { setPendingTxns } = props;
   const { active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
   const { chainId } = useChainId();
 
   const [receiver, setReceiver] = useState("");

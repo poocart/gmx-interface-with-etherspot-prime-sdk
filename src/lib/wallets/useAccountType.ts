@@ -10,7 +10,7 @@ export enum AccountType {
 export default function useAccountType() {
   const { active, library } = useWeb3React();
   const [contractType, setContractType] = useState<AccountType | null>(null);
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
 
   useEffect(() => {
     if (!active) return;

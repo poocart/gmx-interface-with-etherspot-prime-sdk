@@ -5,6 +5,7 @@ import "./SwapBox.scss";
 
 import useSWR from "swr";
 import { ethers } from "ethers";
+import { useEtherspotTransactions } from "@etherspot/transaction-kit";
 
 import { IoMdSwap } from "react-icons/io";
 import { BsArrowRight } from "react-icons/bs";
@@ -42,6 +43,7 @@ import {
 import { ARBITRUM, getChainName, getConstant, IS_NETWORK_DISABLED, isSupportedChain } from "config/chains";
 import * as Api from "domain/legacy";
 import { getContract } from "config/contracts";
+import { isEtherspot } from "config/env";
 
 import Tab from "../Tab/Tab";
 import TokenSelector from "./TokenSelector";
@@ -83,7 +85,6 @@ import ToggleSwitch from "components/ToggleSwitch/ToggleSwitch";
 import LeverageSlider from "./LeverageSlider";
 import BuyInputSection from "components/BuyInputSection/BuyInputSection";
 import FeesTooltip from "./FeesTooltip";
-import { useEtherspotTransactions } from "@etherspot/transaction-kit";
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -92,8 +93,6 @@ const SWAP_ICONS = {
 };
 
 const { AddressZero } = ethers.constants;
-
-const isEtherspot = true;
 
 function getNextAveragePrice({ size, sizeDelta, hasProfit, delta, nextPrice, isLong }) {
   if (!size || !sizeDelta || !delta || !nextPrice) {
@@ -185,6 +184,54 @@ export default function SwapBox(props) {
   const isLong = swapOption === LONG;
   const isShort = swapOption === SHORT;
   const isSwap = swapOption === SWAP;
+
+  const resetEtherspotPrimeTransactions = async () => {
+    const etherspotPrimeSdk = await getEtherspotPrimeSdkForChainId(42161);
+
+    if (!etherspotPrimeSdk) {
+      helperToast.error(t`No Etherspot Prime SDK found for chainId 42161`);
+      return;
+    }
+
+    try {
+      await etherspotPrimeSdk.clearUserOpsFromBatch();
+    } catch (e) {
+      helperToast.error(t`Failed to reset Etherspot Prime transactions!`);
+      console.warn("Failed to reset Etherspot Prime transactions: ", e);
+    }
+  };
+
+  const addEtherspotPrimeTransaction = async (transaction) => {
+    const etherspotPrimeSdk = await getEtherspotPrimeSdkForChainId(42161);
+
+    if (!etherspotPrimeSdk) {
+      helperToast.error(t`No Etherspot Prime SDK found for chainId 42161`);
+      return;
+    }
+
+    try {
+      await etherspotPrimeSdk.addUserOpsToBatch(transaction);
+    } catch (e) {
+      helperToast.error(t`Failed to add Etherspot Prime transaction!`);
+      console.warn("Failed to add Etherspot Prime transaction: ", e);
+    }
+  };
+
+  const submitEtherspotPrimeTransaction = async () => {
+    const etherspotPrimeSdk = await getEtherspotPrimeSdkForChainId(42161);
+
+    if (!etherspotPrimeSdk) {
+      helperToast.error(t`No Etherspot Prime SDK found for chainId 42161`);
+      return;
+    }
+
+    try {
+      const userOpSigned = await etherspotPrimeSdk.sign();
+      await etherspotPrimeSdk.send(userOpSigned);
+    } catch (e) {
+      console.warn("Etherspot Prime SDK error: ", e);
+    }
+  };
 
   function getTokenLabel() {
     switch (true) {
@@ -770,15 +817,15 @@ export default function SwapBox(props) {
       return [t`Incorrect network`];
     }
 
-    // if (
-    //   !savedShouldDisableValidationForTesting &&
-    //   fromTokenInfo &&
-    //   fromTokenInfo.balance &&
-    //   fromAmount &&
-    //   fromAmount.gt(fromTokenInfo.balance)
-    // ) {
-    //   return [t`Insufficient ${fromTokenInfo.symbol} balance`];
-    // }
+    if (
+      !savedShouldDisableValidationForTesting &&
+      fromTokenInfo &&
+      fromTokenInfo.balance &&
+      fromAmount &&
+      fromAmount.gt(fromTokenInfo.balance)
+    ) {
+      return [t`Insufficient ${fromTokenInfo.symbol} balance`];
+    }
 
     const toTokenInfo = getTokenInfo(infoTokens, toTokenAddress);
 
@@ -853,15 +900,15 @@ export default function SwapBox(props) {
     }
 
     const fromTokenInfo = getTokenInfo(infoTokens, fromTokenAddress);
-    // if (
-    //   !savedShouldDisableValidationForTesting &&
-    //   fromTokenInfo &&
-    //   fromTokenInfo.balance &&
-    //   fromAmount &&
-    //   fromAmount.gt(fromTokenInfo.balance)
-    // ) {
-    //   return [t`Insufficient ${fromTokenInfo.symbol} balance`];
-    // }
+    if (
+      !savedShouldDisableValidationForTesting &&
+      fromTokenInfo &&
+      fromTokenInfo.balance &&
+      fromAmount &&
+      fromAmount.gt(fromTokenInfo.balance)
+    ) {
+      return [t`Insufficient ${fromTokenInfo.symbol} balance`];
+    }
 
     if (leverage && leverage.eq(0)) {
       return [t`Enter an amount`];
@@ -1229,11 +1276,11 @@ export default function SwapBox(props) {
     setTokenSelection(updatedTokenSelection);
   };
 
-  const wrap = async (readOnly = false) => {
+  const wrap = async ({ readOnly = false }) => {
     if (!readOnly) setIsSubmitting(true);
 
     const contract = new ethers.Contract(nativeTokenAddress, WETH.abi, library.getSigner());
-    return callContract(chainId, contract, "deposit", {
+    return callContract(chainId, contract, "deposit", [], {
       value: fromAmount,
       sentMsg: t`Swap submitted.`,
       successMsg: t`Swapped ${formatAmount(fromAmount, fromToken.decimals, 4, true)} ${
@@ -1241,7 +1288,6 @@ export default function SwapBox(props) {
       } for ${formatAmount(toAmount, toToken.decimals, 4, true)} ${toToken.symbol}!`,
       failMsg: t`Swap failed.`,
       setPendingTxns,
-    }, {
       readOnly,
     })
       .finally(() => {
@@ -1249,7 +1295,7 @@ export default function SwapBox(props) {
       });
   };
 
-  const unwrap = async (readOnly = false) => {
+  const unwrap = async ({ readOnly = false }) => {
     if (!readOnly) setIsSubmitting(true);
 
     const contract = new ethers.Contract(nativeTokenAddress, WETH.abi, library.getSigner());
@@ -1260,7 +1306,6 @@ export default function SwapBox(props) {
         fromToken.symbol
       } for ${formatAmount(toAmount, toToken.decimals, 4, true)} ${toToken.symbol}!`,
       setPendingTxns,
-    }, {
       readOnly,
     })
       .finally(() => {
@@ -1270,12 +1315,20 @@ export default function SwapBox(props) {
 
   const swap = async () => {
     if (fromToken.isNative && toToken.isWrapped) {
-      wrap();
+      const transaction = await wrap({ readOnly: isEtherspot });
+      if (isEtherspot) {
+        await addEtherspotPrimeTransaction(transaction);
+        await submitEtherspotPrimeTransaction();
+      }
       return;
     }
 
     if (fromTokenAddress.isWrapped && toToken.isNative) {
-      unwrap();
+      const transaction = await unwrap({ readOnly: isEtherspot });
+      if (isEtherspot) {
+        await addEtherspotPrimeTransaction(transaction);
+        await submitEtherspotPrimeTransaction();
+      }
       return;
     }
 
@@ -1320,31 +1373,49 @@ export default function SwapBox(props) {
     let value;
     let params;
     let minOut;
-    // if (shouldRaiseGasError(getTokenInfo(infoTokens, fromTokenAddress), fromAmount)) {
-    //   setIsSubmitting(false);
-    //   setIsPendingConfirmation(true);
-    //   helperToast.error(
-    //     t`Leave at least ${formatAmount(DUST_BNB, 18, 3)} ${getConstant(chainId, "nativeTokenSymbol")} for gas`
-    //   );
-    //   return;
-    // }
+    if (shouldRaiseGasError(getTokenInfo(infoTokens, fromTokenAddress), fromAmount)) {
+      setIsSubmitting(false);
+      setIsPendingConfirmation(true);
+      helperToast.error(
+        t`Leave at least ${formatAmount(DUST_BNB, 18, 3)} ${getConstant(chainId, "nativeTokenSymbol")} for gas`
+      );
+      return;
+    }
 
     if (!isMarketOrder) {
       minOut = toAmount;
-      Api.createSwapOrder(chainId, library, path, fromAmount, minOut, triggerRatio, nativeTokenAddress, {
+      const transaction = await Api.createSwapOrder(chainId, library, path, fromAmount, minOut, triggerRatio, nativeTokenAddress, {
         sentMsg: t`Swap Order submitted!`,
         successMsg: t`Swap Order created!`,
         failMsg: t`Swap Order creation failed.`,
         pendingTxns,
         setPendingTxns,
+        readOnly: isEtherspot,
       })
-        .then(() => {
+        .then((result) => {
+          if (isEtherspot) return result;
           setIsConfirming(false);
         })
         .finally(() => {
+          if (isEtherspot) return;
           setIsSubmitting(false);
           setIsPendingConfirmation(false);
         });
+
+      if (!isEtherspot) return;
+
+      await addEtherspotPrimeTransaction({
+        value: transaction.value,
+        data: transaction.data,
+        to: transaction.to,
+      });
+
+      await submitEtherspotPrimeTransaction();
+
+      setIsConfirming(false);
+      setIsSubmitting(false);
+      setIsPendingConfirmation(false);
+
       return;
     }
 
@@ -1364,7 +1435,7 @@ export default function SwapBox(props) {
     }
     contract = new ethers.Contract(routerAddress, Router.abi, library.getSigner());
 
-    callContract(chainId, contract, method, params, {
+    const transaction = await callContract(chainId, contract, method, params, {
       value,
       sentMsg: t`Swap ${!isMarketOrder ? " order " : ""} submitted!`,
       successMsg: t`Swapped ${formatAmount(fromAmount, fromToken.decimals, 4, true)} ${
@@ -1372,14 +1443,29 @@ export default function SwapBox(props) {
       } for ${formatAmount(toAmount, toToken.decimals, 4, true)} ${toToken.symbol}!`,
       failMsg: t`Swap failed.`,
       setPendingTxns,
+      readOnly: isEtherspot,
     })
-      .then(async () => {
+      .then((result) => {
+        if (isEtherspot) return result;
         setIsConfirming(false);
       })
       .finally(() => {
+        if (isEtherspot) return;
         setIsSubmitting(false);
         setIsPendingConfirmation(false);
       });
+
+    await addEtherspotPrimeTransaction({
+      value: transaction.value,
+      data: transaction.data,
+      to: transaction.to,
+    });
+
+    await submitEtherspotPrimeTransaction();
+
+    setIsConfirming(false);
+    setIsSubmitting(false);
+    setIsPendingConfirmation(false);
   };
 
   const createIncreaseOrder = () => {
@@ -1520,14 +1606,14 @@ export default function SwapBox(props) {
       ];
     }
 
-    // if (shouldRaiseGasError(getTokenInfo(infoTokens, fromTokenAddress), fromAmount)) {
-    //   setIsSubmitting(false);
-    //   setIsPendingConfirmation(false);
-    //   helperToast.error(
-    //     t`Leave at least ${formatAmount(DUST_BNB, 18, 3)} ${getConstant(chainId, "nativeTokenSymbol")} for gas`
-    //   );
-    //   return;
-    // }
+    if (shouldRaiseGasError(getTokenInfo(infoTokens, fromTokenAddress), fromAmount)) {
+      setIsSubmitting(false);
+      setIsPendingConfirmation(false);
+      helperToast.error(
+        t`Leave at least ${formatAmount(DUST_BNB, 18, 3)} ${getConstant(chainId, "nativeTokenSymbol")} for gas`
+      );
+      return;
+    }
 
     const contractAddress = getContract(chainId, "PositionRouter");
     const contract = new ethers.Contract(contractAddress, PositionRouter.abi, library.getSigner());
@@ -1582,21 +1668,16 @@ export default function SwapBox(props) {
 
     if (!isEtherspot) return;
 
-    // TODO: replace with chainId
-    const etherspotPrimeSdk = await getEtherspotPrimeSdkForChainId(80001);
-
-    await etherspotPrimeSdk.addUserOpsToBatch({
+    await addEtherspotPrimeTransaction({
       value: transaction.value,
       data: transaction.data,
       to: transaction.to,
     });
 
-    const userOpState = await etherspotPrimeSdk.state
-    console.log({ userOpState })
-    const userOpSigned = await etherspotPrimeSdk.sign();
-    console.log({ userOpSigned })
-    const result = await etherspotPrimeSdk.send(userOpSigned);
-    console.log({ result })
+    await submitEtherspotPrimeTransaction();
+
+    setIsSubmitting(false);
+    setIsPendingConfirmation(false);
   };
 
   const onSwapOptionChange = (opt) => {
@@ -1627,18 +1708,11 @@ export default function SwapBox(props) {
       return;
     }
 
-    console.log('onConfirmationClick!!!!')
-
     if (needOrderBookApproval) {
-      const approvalTransaction = await approveOrderBook(isEtherspot);
+      const approvalTransaction = await approveOrderBook({ readOnly: isEtherspot });
       if (!isEtherspot) return;
 
-      console.log({ approvalTransaction })
-
-      // TODO: replace with chainId
-      const etherspotPrimeSdk = await getEtherspotPrimeSdkForChainId(80001);
-
-      await etherspotPrimeSdk.addUserOpsToBatch({
+      await addEtherspotPrimeTransaction({
         value: approvalTransaction.value,
         data: approvalTransaction.data,
         to: approvalTransaction.to,
@@ -1660,8 +1734,8 @@ export default function SwapBox(props) {
     increasePosition();
   };
 
-  async function approveFromToken(readOnly = false) {
-    await approveTokens({
+  async function approveFromToken({ readOnly = false }) {
+    return approveTokens({
       setIsApproving,
       library,
       tokenAddress: fromToken.address,
@@ -1679,19 +1753,8 @@ export default function SwapBox(props) {
   }
 
   const onClickPrimary = async () => {
-    let etherspotPrimeSdk;
-
     if (isEtherspot) {
-      // TODO: replace with chainId
-      etherspotPrimeSdk = await getEtherspotPrimeSdkForChainId(80001);
-
-      if (!etherspotPrimeSdk) {
-        // TODO: add error message
-        console.error('No Etherspot Prime SDK found for chainId 80001');
-        return;
-      }
-
-      await etherspotPrimeSdk.clearUserOpsFromBatch();
+      await resetEtherspotPrimeTransactions();
     }
 
     if (isStopOrder) {
@@ -1704,8 +1767,6 @@ export default function SwapBox(props) {
       return;
     }
 
-    const transactions = [];
-
     if (needPositionRouterApproval) {
       const approvalTransaction = await approvePositionRouter({
         sentMsg: t`Enable leverage sent.`,
@@ -1713,13 +1774,13 @@ export default function SwapBox(props) {
         readOnly: isEtherspot,
       });
       if (!isEtherspot) return;
-      transactions.push(approvalTransaction);
+      await addEtherspotPrimeTransaction(approvalTransaction);
     }
 
     if (needApproval) {
-      const approvalTransaction = await approveFromToken(isEtherspot);
+      const approvalTransaction = await approveFromToken({ readOnly: isEtherspot });
       if (!isEtherspot) return;
-      transactions.push(approvalTransaction);
+      await addEtherspotPrimeTransaction(approvalTransaction);
     }
 
     if (needOrderBookApproval) {
@@ -1727,8 +1788,8 @@ export default function SwapBox(props) {
         setOrdersToaOpen(true);
         return;
       }
-      const approvalTransaction = await approveOrderBook(isEtherspot);
-      transactions.push(approvalTransaction);
+      const approvalTransaction = await approveOrderBook({ readOnly: isEtherspot });
+      await addEtherspotPrimeTransaction(approvalTransaction);
     }
 
     const [, errorType, errorCode] = getError();
@@ -1740,23 +1801,15 @@ export default function SwapBox(props) {
 
     if (isSwap) {
       if (fromTokenAddress === AddressZero && toTokenAddress === nativeTokenAddress) {
-        const wrapTransaction = await wrap(isEtherspot);
+        const wrapTransaction = await wrap({ readOnly: isEtherspot });
         if (!isEtherspot) return;
-        transactions.push(wrapTransaction);
+        await addEtherspotPrimeTransaction(wrapTransaction);
       } else if (fromTokenAddress === nativeTokenAddress && toTokenAddress === AddressZero) {
-        const unwrapTransaction = await unwrap(isEtherspot);
+        const unwrapTransaction = await unwrap({ readOnly: isEtherspot });
         if (!isEtherspot) return;
-        transactions.push(unwrapTransaction);
+        await addEtherspotPrimeTransaction(unwrapTransaction);
       }
     }
-
-    await Promise.all(transactions.map(async (transaction) => {
-      await etherspotPrimeSdk.addUserOpsToBatch({
-        value: transaction.value,
-        data: transaction.data,
-        to: transaction.to,
-      });
-    }));
 
     setIsConfirming(true);
     setIsHigherSlippageAllowed(false);

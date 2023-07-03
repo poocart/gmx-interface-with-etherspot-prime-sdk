@@ -669,8 +669,9 @@ function FullApp() {
 
 function EtherspotProvider({ children }) {
   const { library } = useWeb3React();
+
   return (
-    <EtherspotTransactionKit chainId={80001} provider={library?.provider}>
+    <EtherspotTransactionKit chainId={42161} provider={library?.provider}>
       {children}
     </EtherspotTransactionKit>
   )

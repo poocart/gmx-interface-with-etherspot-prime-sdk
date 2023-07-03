@@ -551,7 +551,7 @@ export default function StakeV1() {
   const [unstakingFarmAddress, setUnstakingFarmAddress] = useState("");
 
   const { activate, active, library, deactivate } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
   const connectWallet = getInjectedHandler(activate, deactivate);
 
   const readerAddress = getContract(CHAIN_ID, "Reader");

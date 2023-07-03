@@ -17,7 +17,7 @@ export default function NftWallet() {
   const [isSubmitting, setIsSubmitting] = useState("");
 
   const { active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
   const { chainId } = useChainId();
 
   function getTransferError() {

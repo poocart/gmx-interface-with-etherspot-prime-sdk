@@ -37,7 +37,7 @@ export function ReferralCodeForm({
   type = "join",
 }) {
   const { library, chainId } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
   const [referralCode, setReferralCode] = useState("");
   const inputRef = useRef("");
   const [isValidating, setIsValidating] = useState(false);

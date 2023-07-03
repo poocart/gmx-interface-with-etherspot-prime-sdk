@@ -56,7 +56,7 @@ export function AffiliateCodeForm({
   const [referralCodeCheckStatus, setReferralCodeCheckStatus] = useState("ok");
   const debouncedReferralCode = useDebounce(referralCode, 300);
   const { chainId } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime", 80001);
+  const account = useWalletAddress("etherspot-prime");
 
   useEffect(() => {
     inputRef.current.focus();
