@@ -2851,11 +2851,11 @@ __metadata:
   linkType: hard
 
 "@etherspot/react-etherspot@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "@etherspot/react-etherspot@npm:1.1.1"
+  version: 1.2.0
+  resolution: "@etherspot/react-etherspot@npm:1.2.0"
   peerDependencies:
     react: ">=16.0.0"
-  checksum: 3f7b3df11bf16bafc48097a3d209c5195e29ecb8531609edd74fe66f3a7dc28a68afd5c08b8d6e3cd7721eeeac6d9d5094f81386bfa013dfe09146174d6aff63
+  checksum: 4c9bd0db4d4f1152440dc2950a6cf8d383d84f99f4b34913dd3bd1568aac2784f9091d061c1821b92bd621d2a8a591d00d4beb30dde53df4404a23ded1b0b8c1
   languageName: node
   linkType: hard
 

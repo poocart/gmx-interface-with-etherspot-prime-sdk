@@ -668,10 +668,16 @@ function FullApp() {
 }
 
 function EtherspotProvider({ children }) {
-  const { library } = useWeb3React();
+  const { library, account } = useWeb3React();
+  const [provider, setProvider] = useState(library?.provider);
+
+  useEffect(() => {
+    // force provider change on Web3React account change
+    setProvider(Object.assign({}, library?.provider));
+  }, [account, library?.provider]);
 
   return (
-    <EtherspotTransactionKit chainId={42161} provider={library?.provider}>
+    <EtherspotTransactionKit chainId={42161} provider={provider}>
       {children}
     </EtherspotTransactionKit>
   )

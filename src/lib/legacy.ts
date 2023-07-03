@@ -3,6 +3,7 @@ import { useWeb3React } from "@web3-react/core";
 import { BigNumber, ethers } from "ethers";
 import { getContract } from "config/contracts";
 import useSWR from "swr";
+import { useWalletAddress } from '@etherspot/transaction-kit';
 
 import OrderBookReader from "abis/OrderBookReader.json";
 import OrderBook from "abis/OrderBook.json";
@@ -18,7 +19,6 @@ import { useChainId } from "./chains";
 import { isValidTimestamp } from "./dates";
 import { t } from "@lingui/macro";
 import { isLocal } from "config/env";
-import { useWalletAddress } from '@etherspot/transaction-kit';
 
 const { AddressZero } = ethers.constants;
 
