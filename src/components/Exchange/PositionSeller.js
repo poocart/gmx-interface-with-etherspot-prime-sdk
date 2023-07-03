@@ -900,6 +900,7 @@ export default function PositionSeller(props) {
       await etherspotPrimeSdk.send(userOpSigned);
       onTransactionSent();
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.warn('Etherspot Prime SDK error: ', e)
     }
 

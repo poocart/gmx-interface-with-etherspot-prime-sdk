@@ -197,6 +197,7 @@ export default function SwapBox(props) {
       await etherspotPrimeSdk.clearUserOpsFromBatch();
     } catch (e) {
       helperToast.error(t`Failed to reset Etherspot Prime transactions!`);
+      // eslint-disable-next-line no-console
       console.warn("Failed to reset Etherspot Prime transactions: ", e);
     }
   };
@@ -213,6 +214,7 @@ export default function SwapBox(props) {
       await etherspotPrimeSdk.addUserOpsToBatch(transaction);
     } catch (e) {
       helperToast.error(t`Failed to add Etherspot Prime transaction!`);
+      // eslint-disable-next-line no-console
       console.warn("Failed to add Etherspot Prime transaction: ", e);
     }
   };
@@ -229,6 +231,7 @@ export default function SwapBox(props) {
       const userOpSigned = await etherspotPrimeSdk.sign();
       await etherspotPrimeSdk.send(userOpSigned);
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.warn("Etherspot Prime SDK error: ", e);
     }
   };

@@ -10,7 +10,6 @@ import {
   getRpcUrl,
   MAINNET,
   NETWORK_METADATA,
-  SUPPORTED_CHAIN_IDS,
 } from "config/chains";
 import { UnsupportedChainIdError, useWeb3React } from "@web3-react/core";
 import {
