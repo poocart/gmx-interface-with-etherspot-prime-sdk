@@ -828,6 +828,7 @@ export function handleCancelOrder(chainId, library, order, opts) {
     sentMsg: t`Cancel submitted.`,
     pendingTxns: opts.pendingTxns,
     setPendingTxns: opts.setPendingTxns,
+    etherspotPrimeSdk: opts.etherspotPrimeSdk,
   });
 }
 

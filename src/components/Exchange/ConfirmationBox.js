@@ -1,5 +1,6 @@
 import React, { useCallback, useState, useMemo, useRef, useEffect } from "react";
 import { useKey } from "react-use";
+import { useEtherspotTransactions } from "@etherspot/transaction-kit";
 import "./ConfirmationBox.css";
 import {
   USD_DECIMALS,
@@ -17,6 +18,7 @@ import {
 } from "lib/legacy";
 import { getConstant } from "config/chains";
 import { getContract } from "config/contracts";
+import { isEtherspot } from "config/env";
 
 import { BsArrowRight } from "react-icons/bs";
 import Modal from "../Modal/Modal";
@@ -138,6 +140,8 @@ export default function ConfirmationBox(props) {
 
   const [allowedSlippage, setAllowedSlippage] = useState(savedSlippageAmount);
 
+  const { getEtherspotPrimeSdkForChainId } = useEtherspotTransactions()
+
   useEffect(() => {
     setAllowedSlippage(savedSlippageAmount);
     if (isHigherSlippageAllowed) {
@@ -146,8 +150,12 @@ export default function ConfirmationBox(props) {
   }, [savedSlippageAmount, isHigherSlippageAllowed]);
 
   const onCancelOrderClick = useCallback(
-    (order) => {
-      handleCancelOrder(chainId, library, order, { pendingTxns, setPendingTxns });
+    async (order) => {
+      handleCancelOrder(chainId, library, order, {
+        pendingTxns,
+        setPendingTxns,
+        etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161),
+      });
     },
     [library, pendingTxns, setPendingTxns, chainId]
   );

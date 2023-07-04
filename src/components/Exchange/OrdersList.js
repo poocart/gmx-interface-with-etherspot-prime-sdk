@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { t, Trans } from "@lingui/macro";
+import { useEtherspotTransactions } from "@etherspot/transaction-kit";
 
 import {
   SWAP,
@@ -24,6 +25,7 @@ import { TRIGGER_PREFIX_ABOVE, TRIGGER_PREFIX_BELOW } from "config/ui";
 import { getTokenInfo, getUsd } from "domain/tokens/utils";
 import { formatAmount } from "lib/numbers";
 import ExternalLink from "components/ExternalLink/ExternalLink";
+import { isEtherspot } from "config/env";
 
 function getOrderTitle(order, indexTokenSymbol) {
   const orderTypeText = order.type === INCREASE ? t`Increase` : t`Decrease`;
@@ -52,10 +54,15 @@ export default function OrdersList(props) {
   } = props;
 
   const [editingOrder, setEditingOrder] = useState(null);
+  const { getEtherspotPrimeSdkForChainId } = useEtherspotTransactions()
 
   const onCancelClick = useCallback(
-    (order) => {
-      handleCancelOrder(chainId, library, order, { pendingTxns, setPendingTxns });
+    async (order) => {
+      handleCancelOrder(chainId, library, order, {
+        pendingTxns,
+        setPendingTxns,
+        etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161),
+      });
     },
     [library, pendingTxns, setPendingTxns, chainId]
   );
