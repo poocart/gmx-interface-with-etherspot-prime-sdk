@@ -14,12 +14,10 @@ import {
   USD_DECIMALS,
   getPositionKey,
   getPositionContractKey,
-  getLeverage,
   getDeltaStr,
   useAccountOrders,
   getPageTitle,
   getFundingFee,
-  getLeverageStr,
 } from "lib/legacy";
 import { getConstant, getExplorerUrl } from "config/chains";
 import { approvePlugin, useExecutionFee, cancelMultipleOrders } from "domain/legacy";
@@ -54,6 +52,7 @@ import { useChainId } from "lib/chains";
 import ExternalLink from "components/ExternalLink/ExternalLink";
 import UsefulLinks from "components/Exchange/UsefulLinks";
 import { useWalletAddress } from "@etherspot/transaction-kit";
+import { getLeverage, getLeverageStr } from "lib/positions/getLeverage";
 const { AddressZero } = ethers.constants;
 
 const PENDING_POSITION_VALID_DURATION = 600 * 1000;
@@ -282,12 +281,12 @@ export function getPositions(
     position.leverage = getLeverage({
       size: position.size,
       collateral: position.collateral,
-      entryFundingRate: position.entryFundingRate,
-      cumulativeFundingRate: position.cumulativeFundingRate,
+      fundingFee: position.fundingFee,
       hasProfit: position.hasProfit,
       delta: position.delta,
       includeDelta,
     });
+
     position.leverageStr = getLeverageStr(position.leverage);
 
     positionsMap[key] = position;
