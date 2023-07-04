@@ -78,7 +78,7 @@ function StakeModal(props) {
   const [isApproving, setIsApproving] = useState(false);
 
   const { data: tokenAllowance } = useSWR(
-    active && stakingTokenAddress && [active, chainId, stakingTokenAddress, "allowance", account, farmAddress],
+    account && active && stakingTokenAddress && [active, chainId, stakingTokenAddress, "allowance", account, farmAddress],
     {
       fetcher: contractFetcher(library, Token),
     }
@@ -611,7 +611,7 @@ function CompoundModal(props) {
   const [isApproving, setIsApproving] = useState(false);
 
   const { data: tokenAllowance } = useSWR(
-    active && [active, chainId, gmxAddress, "allowance", account, stakedGmxTrackerAddress],
+    account && active && [active, chainId, gmxAddress, "allowance", account, stakedGmxTrackerAddress],
     {
       fetcher: contractFetcher(library, Token),
     }
@@ -978,7 +978,7 @@ export default function StakeV2({ setPendingTxns, connectWallet }) {
   ];
 
   const { data: walletBalances } = useSWR(
-    [
+    account && [
       `StakeV2:walletBalances:${active}`,
       chainId,
       readerAddress,

@@ -81,7 +81,7 @@ export default function PositionEditor(props) {
   const positionRouterAddress = getContract(chainId, "PositionRouter");
 
   const { data: tokenAllowance } = useSWR(
-    [active, chainId, collateralTokenAddress, "allowance", account, routerAddress],
+    account && [active, chainId, collateralTokenAddress, "allowance", account, routerAddress],
     {
       fetcher: contractFetcher(library, Token),
     }

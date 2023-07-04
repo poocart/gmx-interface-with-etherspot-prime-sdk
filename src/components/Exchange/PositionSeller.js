@@ -429,7 +429,7 @@ export default function PositionSeller(props) {
        a position has profit or loss and how much fees it has. The following logic counters the backend logic
        and determines the exact collateralDelta to be passed so that ultimately the nextCollateral value
        generated will keep leverage the same.
-       
+
        The backend logic can be found in reduceCollateral function at
        https://github.com/gmx-io/gmx-contracts/blob/master/contracts/core/Vault.sol#L992
       */
@@ -881,6 +881,7 @@ export default function PositionSeller(props) {
           successMsg: t`Order created!`,
           failMsg: t`Order creation failed.`,
           setPendingTxns,
+          etherspotPrimeSdk: isEtherspot && etherspotPrimeSdk,
         }
       )
         .then(() => {
@@ -942,23 +943,7 @@ export default function PositionSeller(props) {
 
     const contract = new ethers.Contract(positionRouterAddress, PositionRouter.abi, library.getSigner());
 
-    const onTransactionSent = () => {
-      setFromValue("");
-      setIsVisible(false);
-
-      let nextSize = position.size.sub(sizeDelta);
-
-      pendingPositions[position.key] = {
-        updatedAt: Date.now(),
-        pendingChanges: {
-          size: nextSize,
-        },
-      };
-
-      setPendingPositions({ ...pendingPositions });
-    };
-
-    const transaction = await callContract(chainId, contract, "createDecreasePosition", params, {
+    await callContract(chainId, contract, "createDecreasePosition", params, {
       value: minExecutionFee,
       sentMsg: t`Close submitted!`,
       successMsg,
@@ -967,31 +952,26 @@ export default function PositionSeller(props) {
       // for Arbitrum, sometimes the successMsg shows after the position has already been executed
       // hide the success message for Arbitrum as a workaround
       hideSuccessMsg: chainId === ARBITRUM,
-      readOnly: isEtherspot,
+      etherspotPrimeSdk: isEtherspot && etherspotPrimeSdk,
     })
-      .then((result) => {
-        if (isEtherspot) return result;
-        onTransactionSent();
+      .then(() => {
+        setFromValue("");
+        setIsVisible(false);
+
+        let nextSize = position.size.sub(sizeDelta);
+
+        pendingPositions[position.key] = {
+          updatedAt: Date.now(),
+          pendingChanges: {
+            size: nextSize,
+          },
+        };
+
+        setPendingPositions({ ...pendingPositions });
       })
       .finally(() => {
-        if (!isEtherspot) return;
         setIsSubmitting(false);
       });
-
-    await etherspotPrimeSdk.addUserOpsToBatch({
-      value: transaction.value,
-      data: transaction.data,
-      to: transaction.to,
-    });
-
-    try {
-      const userOpSigned = await etherspotPrimeSdk.sign();
-      await etherspotPrimeSdk.send(userOpSigned);
-      onTransactionSent();
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn('Etherspot Prime SDK error: ', e)
-    }
 
     setIsSubmitting(false);
   };

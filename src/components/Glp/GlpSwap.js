@@ -179,7 +179,7 @@ export default function GlpSwap(props) {
 
   const tokenAllowanceAddress = swapTokenAddress === AddressZero ? nativeTokenAddress : swapTokenAddress;
   const { data: tokenAllowance } = useSWR(
-    [active, chainId, tokenAllowanceAddress, "allowance", account || PLACEHOLDER_ACCOUNT, glpManagerAddress],
+    account && [active, chainId, tokenAllowanceAddress, "allowance", account || PLACEHOLDER_ACCOUNT, glpManagerAddress],
     {
       fetcher: contractFetcher(library, Token),
     }

@@ -267,7 +267,11 @@ export function getAlchemyWsUrl() {
   return "wss://arb-mainnet.g.alchemy.com/v2/EmVYwUw0N2tXOuG0SZfe5Z04rzBsCbr2";
 }
 
-export function getExplorerUrl(chainId) {
+export function getExplorerUrl(chainId, isEtherspot = false) {
+  if (isEtherspot) {
+    return 'https://aascan.org/arbitrum/'
+  }
+
   if (chainId === 3) {
     return "https://ropsten.etherscan.io/";
   } else if (chainId === 42) {

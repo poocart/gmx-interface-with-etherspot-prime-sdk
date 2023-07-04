@@ -466,12 +466,12 @@ export const Exchange = forwardRef((props, ref) => {
   const tokens = getTokens(chainId);
 
   const tokenAddresses = tokens.map((token) => token.address);
-  const { data: tokenBalances } = useSWR(active && [active, chainId, readerAddress, "getTokenBalances", account], {
+  const { data: tokenBalances } = useSWR(account && active && [active, chainId, readerAddress, "getTokenBalances", account], {
     fetcher: contractFetcher(library, Reader, [tokenAddresses]),
   });
 
   const { data: positionData, error: positionDataError } = useSWR(
-    active && [active, chainId, readerAddress, "getPositions", vaultAddress, account],
+    account && active && [active, chainId, readerAddress, "getPositions", vaultAddress, account],
     {
       fetcher: contractFetcher(library, Reader, [
         positionQuery.collateralTokens,
@@ -501,14 +501,14 @@ export const Exchange = forwardRef((props, ref) => {
   const orderBookAddress = getContract(chainId, "OrderBook");
   const routerAddress = getContract(chainId, "Router");
   const { data: orderBookApproved } = useSWR(
-    active && [active, chainId, routerAddress, "approvedPlugins", account, orderBookAddress],
+    account && active && [active, chainId, routerAddress, "approvedPlugins", account, orderBookAddress],
     {
       fetcher: contractFetcher(library, Router),
     }
   );
 
   const { data: positionRouterApproved } = useSWR(
-    active && [active, chainId, routerAddress, "approvedPlugins", account, positionRouterAddress],
+    account && active && [active, chainId, routerAddress, "approvedPlugins", account, positionRouterAddress],
     {
       fetcher: contractFetcher(library, Router),
     }

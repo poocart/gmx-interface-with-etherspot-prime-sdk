@@ -98,7 +98,7 @@ function MigrationModal(props) {
   const [isApproving, setIsApproving] = useState(false);
 
   const { data: tokenAllowance, mutate: updateTokenAllowance } = useSWR(
-    [active, CHAIN_ID, token.address, "allowance", account, gmxMigratorAddress],
+    account && [active, CHAIN_ID, token.address, "allowance", account, gmxMigratorAddress],
     {
       fetcher: contractFetcher(library, Token),
     }

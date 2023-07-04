@@ -54,11 +54,11 @@ export default function Actions({ savedIsPnlInLeverage, savedShowPnlAfterFees })
 
   const whitelistedTokenAddresses = whitelistedTokens.map((token) => token.address);
   const tokenAddresses = tokens.map((token) => token.address);
-  const { data: tokenBalances } = useSWR([active, chainId, readerAddress, "getTokenBalances", account], {
+  const { data: tokenBalances } = useSWR(account && [active, chainId, readerAddress, "getTokenBalances", account], {
     fetcher: contractFetcher(library, Reader, [tokenAddresses]),
   });
 
-  const { data: positionData } = useSWR([active, chainId, readerAddress, "getPositions", vaultAddress, account], {
+  const { data: positionData } = useSWR(account && [active, chainId, readerAddress, "getPositions", vaultAddress, account], {
     fetcher: contractFetcher(library, Reader, [
       positionQuery.collateralTokens,
       positionQuery.indexTokens,

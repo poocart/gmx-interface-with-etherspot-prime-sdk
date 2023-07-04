@@ -104,7 +104,7 @@ export default function BeginAccountTransfer(props) {
   );
 
   const { data: gmxAllowance } = useSWR(
-    active && [active, chainId, gmxAddress, "allowance", account, stakedGmxTrackerAddress],
+    account && active && [active, chainId, gmxAddress, "allowance", account, stakedGmxTrackerAddress],
     {
       fetcher: contractFetcher(library, Token),
     }

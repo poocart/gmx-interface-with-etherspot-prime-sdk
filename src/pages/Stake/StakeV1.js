@@ -298,7 +298,7 @@ function StakeModal(props) {
   const [isApproving, setIsApproving] = useState(false);
 
   const { data: tokenAllowance, mutate: updateTokenAllowance } = useSWR(
-    [active, chainId, stakingTokenAddress, "allowance", account, farmAddress],
+    account && [active, chainId, stakingTokenAddress, "allowance", account, farmAddress],
     {
       fetcher: contractFetcher(library, Token),
     }
@@ -623,7 +623,7 @@ export default function StakeV1() {
   );
 
   const { data: balances, mutate: updateBalances } = useSWR(
-    ["Stake:balances", chainId, readerAddress, "getTokenBalancesWithSupplies", account || AddressZero],
+    account && ["Stake:balances", chainId, readerAddress, "getTokenBalancesWithSupplies", account || AddressZero],
     {
       fetcher: contractFetcher(library, Reader, [tokens]),
     }

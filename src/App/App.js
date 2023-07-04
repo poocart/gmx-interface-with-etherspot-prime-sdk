@@ -692,15 +692,15 @@ function App() {
   return (
     <SWRConfig value={{ refreshInterval: 5000 }}>
       <Web3ReactProvider getLibrary={getLibrary}>
-        <EtherspotProvider>
           <SEO>
             <Router>
               <I18nProvider i18n={i18n}>
-                <FullApp />
+                <EtherspotProvider>
+                  <FullApp />
+                </EtherspotProvider>
               </I18nProvider>
             </Router>
           </SEO>
-        </EtherspotProvider>
       </Web3ReactProvider>
     </SWRConfig>
   );

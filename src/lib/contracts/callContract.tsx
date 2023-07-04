@@ -1,4 +1,5 @@
 import { BigNumber, Contract } from "ethers";
+import { PopulatedTransaction } from "@ethersproject/contracts";
 import { helperToast } from "../helperToast";
 import { ToastifyDebug } from "components/ToastifyDebug/ToastifyDebug";
 import { extractError, NETWORK_CHANGED, NOT_ENOUGH_FUNDS, RPC_ERROR, SLIPPAGE, USER_DENIED } from "./transactionErrors";
@@ -7,7 +8,7 @@ import { getChainName, getExplorerUrl } from "config/chains";
 import { switchNetwork } from "lib/wallets";
 import { t, Trans } from "@lingui/macro";
 import ExternalLink from "components/ExternalLink/ExternalLink";
-import { PopulatedTransaction } from "@ethersproject/contracts";
+import { isEtherspot } from "../../config/env";
 
 export async function callContract(
   chainId: number,
@@ -23,6 +24,7 @@ export async function callContract(
     failMsg?: string;
     setPendingTxns?: (txns: any) => void;
     readOnly?: boolean;
+    etherspotPrimeSdk?: any;
   }
 ): Promise<void | PopulatedTransaction> {
   try {
@@ -48,12 +50,26 @@ export async function callContract(
       return contract.populateTransaction[method](...params, txnOpts);
     }
 
-    txnOpts.gasLimit = opts.gasLimit ? opts.gasLimit : await getGasLimit(contract, method, params, opts.value);
+    let hash;
+    let res;
+    if (!opts.etherspotPrimeSdk) {
+      txnOpts.gasLimit = opts.gasLimit ? opts.gasLimit : await getGasLimit(contract, method, params, opts.value);
+      await setGasPrice(txnOpts, contract.provider, chainId);
 
-    await setGasPrice(txnOpts, contract.provider, chainId);
+      res = await contract[method](...params, txnOpts);
+      ({ hash } = res);
+    } else {
+      const transaction = await contract.populateTransaction[method](...params, txnOpts);
+      await opts.etherspotPrimeSdk.addUserOpsToBatch({
+        value: transaction.value,
+        data: transaction.data,
+        to: transaction.to,
+      });
+      const userOpSigned = await opts.etherspotPrimeSdk.sign();
+      hash = await opts.etherspotPrimeSdk.send(userOpSigned);
+    }
 
-    const res = await contract[method](...params, txnOpts);
-    const txUrl = getExplorerUrl(chainId) + "tx/" + res.hash;
+    const txUrl = getExplorerUrl(chainId, isEtherspot) + (isEtherspot ? "op/" : "tx/") + hash;
     const sentMsg = opts.sentMsg || t`Transaction sent.`;
 
     helperToast.success(
@@ -69,8 +85,9 @@ export async function callContract(
     if (opts.setPendingTxns) {
       const message = opts.hideSuccessMsg ? undefined : opts.successMsg || t`Transaction completed!`;
       const pendingTxn = {
-        hash: res.hash,
+        hash,
         message,
+        isEtherspot,
       };
       opts.setPendingTxns((pendingTxns) => [...pendingTxns, pendingTxn]);
     }
