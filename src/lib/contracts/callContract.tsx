@@ -69,7 +69,10 @@ export async function callContract(
       hash = await opts.etherspotPrimeSdk.send(userOpSigned);
     }
 
-    const txUrl = getExplorerUrl(chainId, isEtherspot) + (isEtherspot ? "op/" : "tx/") + hash;
+    const txUrl = getExplorerUrl(chainId, isEtherspot)
+      + (isEtherspot ? "userOpHash/" : "tx/")
+      + hash
+      + (isEtherspot ? '?network=arbitrum-one' : '');
     const sentMsg = opts.sentMsg || t`Transaction sent.`;
 
     helperToast.success(
