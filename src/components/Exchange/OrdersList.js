@@ -64,7 +64,7 @@ export default function OrdersList(props) {
         etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161),
       });
     },
-    [library, pendingTxns, setPendingTxns, chainId]
+    [library, pendingTxns, setPendingTxns, chainId, getEtherspotPrimeSdkForChainId]
   );
 
   const onEditClick = useCallback(

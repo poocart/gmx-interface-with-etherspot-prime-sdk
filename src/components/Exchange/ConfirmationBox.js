@@ -157,7 +157,7 @@ export default function ConfirmationBox(props) {
         etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161),
       });
     },
-    [library, pendingTxns, setPendingTxns, chainId]
+    [library, pendingTxns, setPendingTxns, chainId, getEtherspotPrimeSdkForChainId]
   );
 
   let minOut;
