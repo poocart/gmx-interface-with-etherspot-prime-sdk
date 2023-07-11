@@ -2,6 +2,7 @@ import { useWeb3React } from "@web3-react/core";
 import AddressDropdown from "../AddressDropdown/AddressDropdown";
 import ConnectWalletButton from "../Common/ConnectWalletButton";
 import React, { useCallback, useEffect } from "react";
+import { useWalletAddress } from "@etherspot/transaction-kit";
 import { HeaderLink } from "./HeaderLink";
 import connectWalletImg from "img/ic_wallet_24.svg";
 
@@ -16,7 +17,7 @@ import { switchNetwork } from "lib/wallets";
 import { useChainId } from "lib/chains";
 import { isDevelopment } from "config/env";
 import { getIcon } from "config/icons";
-import { useWalletAddress } from "@etherspot/transaction-kit";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 type Props = {
   openSettings: () => void;
@@ -67,7 +68,8 @@ export function AppHeaderUser({
 }: Props) {
   const { chainId } = useChainId();
   const { active } = useWeb3React();
-  const accountAddress = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const accountAddress = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const showConnectionOptions = !isHomeSite();
 
   useEffect(() => {

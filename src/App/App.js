@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo
+} from "react";
 import { SWRConfig } from "swr";
 import { ethers } from "ethers";
 import { Web3ReactProvider, useWeb3React } from "@web3-react/core";
@@ -103,9 +109,10 @@ import {
 } from "lib/wallets";
 import { useChainId } from "lib/chains";
 import ExternalLink from "components/ExternalLink/ExternalLink";
-import { isDevelopment } from "config/env";
+import { isDevelopment, isEtherspotWalletLocal } from "config/env";
 import Button from "components/Button/Button";
 import { roundToTwoDecimals } from "lib/numbers";
+import useEtherspotUiConfig, { EtherspotUiConfigContext } from "../hooks/useEtherspotUiConfig";
 
 if (window?.ethereum?.autoRefreshOnNetworkChange) {
   window.ethereum.autoRefreshOnNetworkChange = false;
@@ -164,13 +171,13 @@ function FullApp() {
 
   const query = useRouteQuery();
 
-  const {
-    connect: connectEtherspot
-  } = useEtherspot();
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const { connect: connectEtherspot } = useEtherspot();
 
   useEffect(() => {
+    if (!isEtherspotWallet) return;
     connectEtherspot();
-  }, [connectEtherspot, library]);
+  }, [connectEtherspot, library, isEtherspotWallet]);
 
   useEffect(() => {
     let referralCode = query.get(REFERRAL_CODE_QUERY_PARAM);
@@ -670,17 +677,34 @@ function FullApp() {
 function EtherspotProvider({ children }) {
   const { library, account } = useWeb3React();
   const [provider, setProvider] = useState(library?.provider);
+  const [isEtherspotWallet, setIsEtherspotWallet] = useState(isEtherspotWalletLocal());
 
   useEffect(() => {
-    // force provider change on Web3React account change
+    // force provider change on Web3React or ui setting change
     setProvider(Object.assign({}, library?.provider));
-  }, [account, library?.provider]);
+  }, [account, library?.provider, isEtherspotWallet]);
+
+  const contextData = useMemo(() => ({
+    isEtherspotWallet,
+    setIsEtherspotWallet: (enabled) => {
+      setIsEtherspotWallet(enabled);
+      if (enabled) {
+        localStorage.setItem('isEtherspotWalletEnabled', 'true');
+        return;
+      }
+      localStorage.removeItem('isEtherspotWalletEnabled');
+    },
+  }), [
+    isEtherspotWallet,
+  ]);
 
   return (
     <EtherspotTransactionKit chainId={42161} provider={provider}>
-      {children}
+      <EtherspotUiConfigContext.Provider value={{ data: contextData }}>
+        {children}
+      </EtherspotUiConfigContext.Provider>
     </EtherspotTransactionKit>
-  )
+  );
 }
 
 function App() {

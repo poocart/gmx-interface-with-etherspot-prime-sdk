@@ -8,6 +8,7 @@ import { ARBITRUM } from "config/chains";
 import { helperToast } from "lib/helperToast";
 import { useDebounce } from "lib/useDebounce";
 import Button from "components/Button/Button";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 function AddAffiliateCode({
   handleCreateReferralCode,
@@ -56,7 +57,8 @@ export function AffiliateCodeForm({
   const [referralCodeCheckStatus, setReferralCodeCheckStatus] = useState("ok");
   const debouncedReferralCode = useDebounce(referralCode, 300);
   const { chainId } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const account = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
 
   useEffect(() => {
     inputRef.current.focus();

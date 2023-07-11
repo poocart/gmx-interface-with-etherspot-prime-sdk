@@ -57,8 +57,8 @@ import { getLeverage } from "lib/positions/getLeverage";
 import Button from "components/Button/Button";
 import ToggleSwitch from "components/ToggleSwitch/ToggleSwitch";
 import SlippageInput from "components/SlippageInput/SlippageInput";
-import { isEtherspot } from "config/env";
 import { helperToast } from "../../lib/helperToast";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 const { AddressZero } = ethers.constants;
 const ORDER_SIZE_DUST_USD = expandDecimals(1, USD_DECIMALS - 1); // $0.10
@@ -215,6 +215,7 @@ export default function PositionSeller(props) {
   const prevIsVisible = usePrevious(isVisible);
   const [allowedSlippage, setAllowedSlippage] = useState(savedSlippageAmount);
   const { getEtherspotPrimeSdkForChainId } = useEtherspotTransactions();
+  const { isEtherspotWallet } = useEtherspotUiConfig();
 
   useEffect(() => {
     setAllowedSlippage(savedSlippageAmount);
@@ -727,7 +728,7 @@ export default function PositionSeller(props) {
       return error;
     }
 
-    if (!isEtherspot) {
+    if (!isEtherspotWallet) {
       if (orderOption === STOP) {
         if (isSubmitting) return t`Creating Order...`;
 
@@ -812,7 +813,7 @@ export default function PositionSeller(props) {
   const onClickPrimary = async () => {
     let etherspotPrimeSdk;
 
-    if (isEtherspot) {
+    if (isEtherspotWallet) {
       etherspotPrimeSdk = await getEtherspotPrimeSdkForChainId(42161);
 
       if (!etherspotPrimeSdk) {
@@ -826,11 +827,11 @@ export default function PositionSeller(props) {
     const transactions = [];
 
     if (needOrderBookApproval) {
-      if (!isEtherspot) {
+      if (!isEtherspotWallet) {
         setOrdersToaOpen(true);
         return;
       }
-      const approvalTransaction = await approveOrderBook({ readOnly: isEtherspot });
+      const approvalTransaction = await approveOrderBook({ readOnly: isEtherspotWallet });
       transactions.push(approvalTransaction);
       return;
     }
@@ -840,15 +841,15 @@ export default function PositionSeller(props) {
       const approvalTransaction = await approvePositionRouter({
         sentMsg: t`Enable leverage sent.`,
         failMsg: t`Enable leverage failed.`,
-        readOnly: isEtherspot,
+        readOnly: isEtherspotWallet,
       });
-      if (!isEtherspot) return;
+      if (!isEtherspotWallet) return;
       transactions.push(approvalTransaction);
     }
 
     setIsSubmitting(true);
 
-    if (isEtherspot) {
+    if (isEtherspotWallet) {
       await Promise.all(transactions.map(async (transaction) => {
         await etherspotPrimeSdk.addUserOpsToBatch({
           value: transaction.value,
@@ -881,7 +882,7 @@ export default function PositionSeller(props) {
           successMsg: t`Order created!`,
           failMsg: t`Order creation failed.`,
           setPendingTxns,
-          etherspotPrimeSdk: isEtherspot && etherspotPrimeSdk,
+          etherspotPrimeSdk: isEtherspotWallet && etherspotPrimeSdk,
         }
       )
         .then(() => {
@@ -952,7 +953,7 @@ export default function PositionSeller(props) {
       // for Arbitrum, sometimes the successMsg shows after the position has already been executed
       // hide the success message for Arbitrum as a workaround
       hideSuccessMsg: chainId === ARBITRUM,
-      etherspotPrimeSdk: isEtherspot && etherspotPrimeSdk,
+      etherspotPrimeSdk: isEtherspotWallet && etherspotPrimeSdk,
     })
       .then(() => {
         setFromValue("");

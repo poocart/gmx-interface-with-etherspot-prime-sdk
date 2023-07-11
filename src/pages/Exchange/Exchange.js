@@ -53,6 +53,7 @@ import ExternalLink from "components/ExternalLink/ExternalLink";
 import UsefulLinks from "components/Exchange/UsefulLinks";
 import { useWalletAddress } from "@etherspot/transaction-kit";
 import { getLeverage, getLeverageStr } from "lib/positions/getLeverage";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 const { AddressZero } = ethers.constants;
 
 const PENDING_POSITION_VALID_DURATION = 600 * 1000;
@@ -382,7 +383,8 @@ export const Exchange = forwardRef((props, ref) => {
   }, [showBanner, bannerHidden, setBannerHidden, setShowBanner]);
 
   const { active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const account = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const { chainId } = useChainId();
   const currentAccount = account;
 

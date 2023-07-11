@@ -16,4 +16,4 @@ export function isLocal() {
   return window.location.host?.includes("localhost");
 }
 
-export const isEtherspot = true;
+export const isEtherspotWalletLocal = () => localStorage.getItem('isEtherspotWalletEnabled') === 'true';

@@ -23,6 +23,7 @@ import ExternalLink from "components/ExternalLink/ExternalLink";
 import { getIcon } from "config/icons";
 import useReferralsData from "domain/referrals/useReferralsData";
 import { useWalletAddress } from "@etherspot/transaction-kit";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 const TRADERS = "Traders";
 const AFFILIATES = "Affiliates";
@@ -30,7 +31,8 @@ const TAB_OPTIONS = [TRADERS, AFFILIATES];
 
 function Referrals({ connectWallet, setPendingTxns, pendingTxns }) {
   const { active, library } = useWeb3React();
-  const walletAccount = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const walletAccount = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const { account: queryAccount } = useParams();
   let account;
   if (queryAccount && ethers.utils.isAddress(queryAccount)) {

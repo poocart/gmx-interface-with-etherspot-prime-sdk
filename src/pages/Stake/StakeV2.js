@@ -52,6 +52,7 @@ import Button from "components/Button/Button";
 import TooltipWithPortal from "components/Tooltip/TooltipWithPortal";
 import BuyInputSection from "components/BuyInputSection/BuyInputSection";
 import { useWalletAddress } from "@etherspot/transaction-kit";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 const { AddressZero } = ethers.constants;
 
@@ -874,7 +875,8 @@ function ClaimModal(props) {
 
 export default function StakeV2({ setPendingTxns, connectWallet }) {
   const { active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const account = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const { chainId } = useChainId();
 
   const chainName = getChainName(chainId);

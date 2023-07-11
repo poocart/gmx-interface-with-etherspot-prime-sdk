@@ -41,7 +41,6 @@ import {
 import { ARBITRUM, getChainName, getConstant, IS_NETWORK_DISABLED, isSupportedChain } from "config/chains";
 import * as Api from "domain/legacy";
 import { getContract } from "config/contracts";
-import { isEtherspot } from "config/env";
 
 import Tab from "../Tab/Tab";
 import TokenSelector from "./TokenSelector";
@@ -85,6 +84,7 @@ import ToggleSwitch from "components/ToggleSwitch/ToggleSwitch";
 import LeverageSlider from "./LeverageSlider";
 import BuyInputSection from "components/BuyInputSection/BuyInputSection";
 import FeesTooltip from "./FeesTooltip";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -168,6 +168,7 @@ export default function SwapBox(props) {
   const [isHigherSlippageAllowed, setIsHigherSlippageAllowed] = useState(false);
   const { attachedOnChain, userReferralCode } = useUserReferralCode(library, chainId, account);
   const { getEtherspotPrimeSdkForChainId } = useEtherspotTransactions();
+  const { isEtherspotWallet } = useEtherspotUiConfig();
 
   let allowedSlippage = savedSlippageAmount;
   if (isHigherSlippageAllowed) {
@@ -1111,7 +1112,7 @@ export default function SwapBox(props) {
       return error;
     }
 
-    if (!isEtherspot) {
+    if (!isEtherspotWallet) {
       if (needPositionRouterApproval && isWaitingForPositionRouterApproval) {
         return t`Enabling Leverage...`;
       }
@@ -1239,7 +1240,7 @@ export default function SwapBox(props) {
       failMsg: t`Swap failed.`,
       setPendingTxns,
       readOnly,
-      etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161)
+      etherspotPrimeSdk: isEtherspotWallet && await getEtherspotPrimeSdkForChainId(42161)
     })
       .finally(() => {
         if (!readOnly) setIsSubmitting(false);
@@ -1258,7 +1259,7 @@ export default function SwapBox(props) {
       } for ${formatAmount(toAmount, toToken.decimals, 4, true)} ${toToken.symbol}!`,
       setPendingTxns,
       readOnly,
-      etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161)
+      etherspotPrimeSdk: isEtherspotWallet && await getEtherspotPrimeSdkForChainId(42161)
     })
       .finally(() => {
         if (!readOnly) setIsSubmitting(false);
@@ -1332,7 +1333,7 @@ export default function SwapBox(props) {
         failMsg: t`Swap Order creation failed.`,
         pendingTxns,
         setPendingTxns,
-        etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161)
+        etherspotPrimeSdk: isEtherspotWallet && await getEtherspotPrimeSdkForChainId(42161)
       })
         .then(() => {
           setIsConfirming(false);
@@ -1373,7 +1374,7 @@ export default function SwapBox(props) {
       } for ${formatAmount(toAmount, toToken.decimals, 4, true)} ${toToken.symbol}!`,
       failMsg: t`Swap failed.`,
       setPendingTxns,
-      etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161),
+      etherspotPrimeSdk: isEtherspotWallet && await getEtherspotPrimeSdkForChainId(42161),
     })
       .then(() => {
         setIsConfirming(false);
@@ -1423,7 +1424,7 @@ export default function SwapBox(props) {
         sentMsg: t`Limit order submitted!`,
         successMsg,
         failMsg: t`Limit order creation failed.`,
-        etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161)
+        etherspotPrimeSdk: isEtherspotWallet && await getEtherspotPrimeSdkForChainId(42161)
       }
     )
       .then(() => {
@@ -1552,7 +1553,7 @@ export default function SwapBox(props) {
       // for Arbitrum, sometimes the successMsg shows after the position has already been executed
       // hide the success message for Arbitrum as a workaround
       hideSuccessMsg: chainId === ARBITRUM,
-      etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161)
+      etherspotPrimeSdk: isEtherspotWallet && await getEtherspotPrimeSdkForChainId(42161)
     })
       .then(async () => {
         setIsConfirming(false);
@@ -1607,8 +1608,8 @@ export default function SwapBox(props) {
     }
 
     if (needOrderBookApproval) {
-      const approvalTransaction = await approveOrderBook({ readOnly: isEtherspot });
-      if (!isEtherspot) return;
+      const approvalTransaction = await approveOrderBook({ readOnly: isEtherspotWallet });
+      if (!isEtherspotWallet) return;
 
       await addEtherspotPrimeTransaction({
         value: approvalTransaction.value,
@@ -1651,7 +1652,7 @@ export default function SwapBox(props) {
   }
 
   const onClickPrimary = async () => {
-    if (isEtherspot) {
+    if (isEtherspotWallet) {
       await resetEtherspotPrimeTransactions();
     }
 
@@ -1669,24 +1670,24 @@ export default function SwapBox(props) {
       const approvalTransaction = await approvePositionRouter({
         sentMsg: t`Enable leverage sent.`,
         failMsg: t`Enable leverage failed.`,
-        readOnly: isEtherspot,
+        readOnly: isEtherspotWallet,
       });
-      if (!isEtherspot) return;
+      if (!isEtherspotWallet) return;
       await addEtherspotPrimeTransaction(approvalTransaction);
     }
 
     if (needApproval) {
-      const approvalTransaction = await approveFromToken({ readOnly: isEtherspot });
-      if (!isEtherspot) return;
+      const approvalTransaction = await approveFromToken({ readOnly: isEtherspotWallet });
+      if (!isEtherspotWallet) return;
       await addEtherspotPrimeTransaction(approvalTransaction);
     }
 
     if (needOrderBookApproval) {
-      if (!isEtherspot) {
+      if (!isEtherspotWallet) {
         setOrdersToaOpen(true);
         return;
       }
-      const approvalTransaction = await approveOrderBook({ readOnly: isEtherspot });
+      const approvalTransaction = await approveOrderBook({ readOnly: isEtherspotWallet });
       await addEtherspotPrimeTransaction(approvalTransaction);
     }
 
@@ -1699,12 +1700,12 @@ export default function SwapBox(props) {
 
     if (isSwap) {
       if (fromTokenAddress === AddressZero && toTokenAddress === nativeTokenAddress) {
-        const wrapTransaction = await wrap({ readOnly: isEtherspot });
-        if (!isEtherspot) return;
+        const wrapTransaction = await wrap({ readOnly: isEtherspotWallet });
+        if (!isEtherspotWallet) return;
         await addEtherspotPrimeTransaction(wrapTransaction);
       } else if (fromTokenAddress === nativeTokenAddress && toTokenAddress === AddressZero) {
-        const unwrapTransaction = await unwrap({ readOnly: isEtherspot });
-        if (!isEtherspot) return;
+        const unwrapTransaction = await unwrap({ readOnly: isEtherspotWallet });
+        if (!isEtherspotWallet) return;
         await addEtherspotPrimeTransaction(unwrapTransaction);
       }
     }

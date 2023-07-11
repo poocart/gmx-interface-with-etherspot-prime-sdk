@@ -37,7 +37,9 @@ export type NetworkMetadata = {
   blockExplorerUrls: string[];
 };
 
-const injectedConnector = new InjectedConnector({});
+const injectedConnector = new InjectedConnector({
+  // supportedChainIds: SUPPORTED_CHAIN_IDS,
+});
 
 export function hasMetaMaskWalletExtension() {
   return window.ethereum;

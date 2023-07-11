@@ -9,6 +9,7 @@ import { t, Trans } from "@lingui/macro";
 import { callContract } from "lib/contracts";
 import { useChainId } from "lib/chains";
 import { useWalletAddress } from "@etherspot/transaction-kit";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 export default function NftWallet() {
   const [nftAddress, setNftAddress] = useState("");
@@ -17,7 +18,8 @@ export default function NftWallet() {
   const [isSubmitting, setIsSubmitting] = useState("");
 
   const { active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const account = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const { chainId } = useChainId();
 
   function getTransferError() {

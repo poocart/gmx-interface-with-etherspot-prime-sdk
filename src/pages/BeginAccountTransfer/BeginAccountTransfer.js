@@ -24,6 +24,7 @@ import { approveTokens } from "domain/tokens";
 import { useChainId } from "lib/chains";
 import Button from "components/Button/Button";
 import { useWalletAddress } from "@etherspot/transaction-kit";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 function ValidationRow({ isValid, children }) {
   return (
@@ -40,7 +41,8 @@ function ValidationRow({ isValid, children }) {
 export default function BeginAccountTransfer(props) {
   const { setPendingTxns } = props;
   const { active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const account = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const { chainId } = useChainId();
 
   const [receiver, setReceiver] = useState("");

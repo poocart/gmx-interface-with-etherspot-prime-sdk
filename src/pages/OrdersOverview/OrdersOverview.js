@@ -26,11 +26,13 @@ import { formatAmount } from "lib/numbers";
 import { useChainId } from "lib/chains";
 import { formatDateTime } from "lib/dates";
 import { useWalletAddress } from "@etherspot/transaction-kit";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 export default function OrdersOverview() {
   const { chainId } = useChainId();
   const { library, active } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const account = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
 
   const nativeTokenAddress = getContract(chainId, "NATIVE_TOKEN");
 

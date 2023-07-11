@@ -56,6 +56,7 @@ import { getIcon } from "config/icons";
 import Button from "components/Button/Button";
 import { IoChevronDownOutline } from "react-icons/io5";
 import { useWalletAddress } from "@etherspot/transaction-kit";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 const { AddressZero } = ethers.constants;
 
@@ -110,7 +111,8 @@ export default function GlpSwap(props) {
   const swapLabel = isBuying ? "BuyGlp" : "SellGlp";
   const tabLabel = isBuying ? t`Buy GLP` : t`Sell GLP`;
   const { active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const account = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const { chainId } = useChainId();
   const tokens = getTokens(chainId);
   const whitelistedTokens = getWhitelistedTokens(chainId);

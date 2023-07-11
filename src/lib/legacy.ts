@@ -19,6 +19,7 @@ import { useChainId } from "./chains";
 import { isValidTimestamp } from "./dates";
 import { t } from "@lingui/macro";
 import { isLocal } from "config/env";
+import useEtherspotUiConfig from "../hooks/useEtherspotUiConfig";
 
 const { AddressZero } = ethers.constants;
 
@@ -846,7 +847,8 @@ export function getOrderKey(order) {
 
 export function useAccountOrders(flagOrdersEnabled, overrideAccount) {
   const { library } = useWeb3React();
-  const connectedAccount = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const connectedAccount = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const active = true; // this is used in Actions.js so set active to always be true
   const account = overrideAccount || connectedAccount;
 

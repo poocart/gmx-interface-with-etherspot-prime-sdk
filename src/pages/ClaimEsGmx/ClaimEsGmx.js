@@ -24,6 +24,7 @@ import { useChainId } from "lib/chains";
 import ExternalLink from "components/ExternalLink/ExternalLink";
 import Button from "components/Button/Button";
 import { useWalletAddress } from "@etherspot/transaction-kit";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 const VEST_WITH_GMX_ARB = "VEST_WITH_GMX_ARB";
 const VEST_WITH_GLP_ARB = "VEST_WITH_GLP_ARB";
@@ -129,7 +130,8 @@ function getVestingValues({ minRatio, amount, vestingDataItem }) {
 
 export default function ClaimEsGmx({ setPendingTxns }) {
   const { active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const account = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const { chainId } = useChainId();
   const [selectedOption, setSelectedOption] = useState("");
   const [isClaiming, setIsClaiming] = useState(false);

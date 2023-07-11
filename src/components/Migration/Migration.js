@@ -31,6 +31,7 @@ import {
 import ExternalLink from "components/ExternalLink/ExternalLink";
 import { t, Trans } from "@lingui/macro";
 import { useWalletAddress } from "@etherspot/transaction-kit";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 const { MaxUint256, AddressZero } = ethers.constants;
 
@@ -318,7 +319,8 @@ export default function Migration() {
   const [migrationValue, setMigrationValue] = useState("");
 
   const { connector, activate, active, library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const account = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const [activatingConnector, setActivatingConnector] = useState();
   useEffect(() => {
     if (activatingConnector && activatingConnector === connector) {

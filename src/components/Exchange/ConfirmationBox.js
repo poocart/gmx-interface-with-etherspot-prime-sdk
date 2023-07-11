@@ -18,7 +18,6 @@ import {
 } from "lib/legacy";
 import { getConstant } from "config/chains";
 import { getContract } from "config/contracts";
-import { isEtherspot } from "config/env";
 
 import { BsArrowRight } from "react-icons/bs";
 import Modal from "../Modal/Modal";
@@ -37,6 +36,7 @@ import Button from "components/Button/Button";
 import FeesTooltip from "./FeesTooltip";
 import { getTokenInfo, getUsd } from "domain/tokens";
 import SlippageInput from "components/SlippageInput/SlippageInput";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 const HIGH_SPREAD_THRESHOLD = expandDecimals(1, USD_DECIMALS).div(100); // 1%;
 
@@ -140,7 +140,8 @@ export default function ConfirmationBox(props) {
 
   const [allowedSlippage, setAllowedSlippage] = useState(savedSlippageAmount);
 
-  const { getEtherspotPrimeSdkForChainId } = useEtherspotTransactions()
+  const { getEtherspotPrimeSdkForChainId } = useEtherspotTransactions();
+  const { isEtherspotWallet } = useEtherspotUiConfig();
 
   useEffect(() => {
     setAllowedSlippage(savedSlippageAmount);
@@ -154,10 +155,10 @@ export default function ConfirmationBox(props) {
       handleCancelOrder(chainId, library, order, {
         pendingTxns,
         setPendingTxns,
-        etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161),
+        etherspotPrimeSdk: isEtherspotWallet && await getEtherspotPrimeSdkForChainId(42161),
       });
     },
-    [library, pendingTxns, setPendingTxns, chainId, getEtherspotPrimeSdkForChainId]
+    [library, pendingTxns, setPendingTxns, chainId, getEtherspotPrimeSdkForChainId, isEtherspotWallet]
   );
 
   let minOut;

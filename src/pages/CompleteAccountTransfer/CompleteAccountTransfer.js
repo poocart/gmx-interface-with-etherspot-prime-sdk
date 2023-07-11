@@ -19,13 +19,15 @@ import { helperToast } from "lib/helperToast";
 import { useChainId } from "lib/chains";
 import Button from "components/Button/Button";
 import { useWalletAddress } from "@etherspot/transaction-kit";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 export default function CompleteAccountTransfer(props) {
   const [, copyToClipboard] = useCopyToClipboard();
   const { sender, receiver } = useParams();
   const { setPendingTxns } = props;
   const { library } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const account = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const [isTransferSubmittedModalVisible, setIsTransferSubmittedModalVisible] = useState(false);
 
   const { chainId } = useChainId();

@@ -223,6 +223,38 @@
   position: relative;
 }
 
+.App-header-etherspot-status-icon {
+  font-size: 16px;
+  color: transparent;
+  text-shadow: 0 0 0 #afafaf;
+  text-align: right;
+}
+
+.App-header-etherspot-status-icon.etherspot-enabled-status {
+  color: inherit;
+  text-shadow: none;
+}
+
+.etherspot-enable-popup .Modal-content {
+  width: 36rem;
+  font-size: var(--font-base);
+}
+
+.etherspot-enable-popup .Modal-content .feature-item {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.etherspot-enable-popup .Modal-content p.secondary {
+  color: #a1a3c2;
+}
+
+.etherspot-enable-popup .Modal-content p.secondary span {
+  color: #fff;
+}
+
 @media (max-width: 1033px) {
   .App-header-user-address {
     padding: 0 0px;

@@ -6,6 +6,7 @@ import { REFERRAL_CODE_REGEX } from "./referralsHelper";
 import { useDebounce } from "lib/useDebounce";
 import Button from "components/Button/Button";
 import { useWalletAddress } from "@etherspot/transaction-kit";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 function JoinReferralCode({ setPendingTxns, pendingTxns, active, connectWallet }) {
   return (
@@ -37,7 +38,8 @@ export function ReferralCodeForm({
   type = "join",
 }) {
   const { library, chainId } = useWeb3React();
-  const account = useWalletAddress("etherspot-prime");
+  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const account = useWalletAddress(isEtherspotWallet ? "etherspot-prime" : "provider");
   const [referralCode, setReferralCode] = useState("");
   const inputRef = useRef("");
   const [isValidating, setIsValidating] = useState(false);

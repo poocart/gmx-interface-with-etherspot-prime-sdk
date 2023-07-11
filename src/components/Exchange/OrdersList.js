@@ -25,7 +25,7 @@ import { TRIGGER_PREFIX_ABOVE, TRIGGER_PREFIX_BELOW } from "config/ui";
 import { getTokenInfo, getUsd } from "domain/tokens/utils";
 import { formatAmount } from "lib/numbers";
 import ExternalLink from "components/ExternalLink/ExternalLink";
-import { isEtherspot } from "config/env";
+import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
 
 function getOrderTitle(order, indexTokenSymbol) {
   const orderTypeText = order.type === INCREASE ? t`Increase` : t`Decrease`;
@@ -54,17 +54,18 @@ export default function OrdersList(props) {
   } = props;
 
   const [editingOrder, setEditingOrder] = useState(null);
-  const { getEtherspotPrimeSdkForChainId } = useEtherspotTransactions()
+  const { getEtherspotPrimeSdkForChainId } = useEtherspotTransactions();
+  const { isEtherspotWallet } = useEtherspotUiConfig();
 
   const onCancelClick = useCallback(
     async (order) => {
       handleCancelOrder(chainId, library, order, {
         pendingTxns,
         setPendingTxns,
-        etherspotPrimeSdk: isEtherspot && await getEtherspotPrimeSdkForChainId(42161),
+        etherspotPrimeSdk: isEtherspotWallet && await getEtherspotPrimeSdkForChainId(42161),
       });
     },
-    [library, pendingTxns, setPendingTxns, chainId, getEtherspotPrimeSdkForChainId]
+    [library, pendingTxns, setPendingTxns, chainId, getEtherspotPrimeSdkForChainId, isEtherspotWallet]
   );
 
   const onEditClick = useCallback(
