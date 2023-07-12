@@ -3,7 +3,9 @@ import { createContext, useContext } from "react";
 interface IEtherspotUiConfigContext {
   data: {
     isEtherspotWallet: boolean;
+    etherspotIntroDisplayed: boolean;
     setIsEtherspotWallet: (isEtherspotWallet: boolean) => void;
+    setEtherspotIntroDisplayed: (displayed: boolean) => void;
   },
 }
 

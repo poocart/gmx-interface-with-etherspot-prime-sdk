@@ -109,7 +109,11 @@ import {
 } from "lib/wallets";
 import { useChainId } from "lib/chains";
 import ExternalLink from "components/ExternalLink/ExternalLink";
-import { isDevelopment, isEtherspotWalletLocal } from "config/env";
+import {
+  isDevelopment,
+  isEtherspotIntroDisplayed,
+  isEtherspotWalletEnabled,
+} from "config/env";
 import Button from "components/Button/Button";
 import { roundToTwoDecimals } from "lib/numbers";
 import useEtherspotUiConfig, { EtherspotUiConfigContext } from "../hooks/useEtherspotUiConfig";
@@ -677,7 +681,8 @@ function FullApp() {
 function EtherspotProvider({ children }) {
   const { library, account } = useWeb3React();
   const [provider, setProvider] = useState(library?.provider);
-  const [isEtherspotWallet, setIsEtherspotWallet] = useState(isEtherspotWalletLocal());
+  const [isEtherspotWallet, setIsEtherspotWallet] = useState(isEtherspotWalletEnabled());
+  const [etherspotIntroDisplayed, setEtherspotIntroDisplayed] = useState(isEtherspotIntroDisplayed());
 
   useEffect(() => {
     // force provider change on Web3React or ui setting change
@@ -686,6 +691,15 @@ function EtherspotProvider({ children }) {
 
   const contextData = useMemo(() => ({
     isEtherspotWallet,
+    etherspotIntroDisplayed,
+    setEtherspotIntroDisplayed: (displayed) => {
+      setEtherspotIntroDisplayed(displayed);
+      if (displayed) {
+        localStorage.setItem('isEtherspotIntroDisplayed', 'true');
+        return;
+      }
+      localStorage.removeItem('isEtherspotIntroDisplayed');
+    },
     setIsEtherspotWallet: (enabled) => {
       setIsEtherspotWallet(enabled);
       if (enabled) {
@@ -696,6 +710,7 @@ function EtherspotProvider({ children }) {
     },
   }), [
     isEtherspotWallet,
+    etherspotIntroDisplayed,
   ]);
 
   return (

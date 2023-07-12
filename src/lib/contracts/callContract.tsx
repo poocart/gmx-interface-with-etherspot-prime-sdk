@@ -8,7 +8,7 @@ import { getChainName, getExplorerUrl } from "config/chains";
 import { switchNetwork } from "lib/wallets";
 import { t, Trans } from "@lingui/macro";
 import ExternalLink from "components/ExternalLink/ExternalLink";
-import { isEtherspotWalletLocal } from "../../config/env";
+import { isEtherspotWalletEnabled } from "../../config/env";
 
 export async function callContract(
   chainId: number,
@@ -69,10 +69,10 @@ export async function callContract(
       hash = await opts.etherspotPrimeSdk.send(userOpSigned);
     }
 
-    const txUrl = getExplorerUrl(chainId, isEtherspotWalletLocal())
-      + (isEtherspotWalletLocal() ? "userOpHash/" : "tx/")
+    const txUrl = getExplorerUrl(chainId, isEtherspotWalletEnabled())
+      + (isEtherspotWalletEnabled() ? "userOpHash/" : "tx/")
       + hash
-      + (isEtherspotWalletLocal() ? '?network=arbitrum-one' : '');
+      + (isEtherspotWalletEnabled() ? '?network=arbitrum-one' : '');
     const sentMsg = opts.sentMsg || t`Transaction sent.`;
 
     helperToast.success(
@@ -90,7 +90,7 @@ export async function callContract(
       const pendingTxn = {
         hash,
         message,
-        isEtherspotWallet: isEtherspotWalletLocal(),
+        isEtherspotWallet: isEtherspotWalletEnabled(),
       };
       opts.setPendingTxns((pendingTxns) => [...pendingTxns, pendingTxn]);
     }

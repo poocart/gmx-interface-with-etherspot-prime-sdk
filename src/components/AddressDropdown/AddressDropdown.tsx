@@ -30,7 +30,7 @@ function AddressDropdown({ account, accountUrl, disconnectAccountAndCloseSetting
   const { ensName } = useENS(account);
   const { provider: ethereumProvider } = useJsonRpcProvider(ETH_MAINNET);
   const [isEtherspotModalOpen, setIsEtherspotModalOpen] = useState(false);
-  const { isEtherspotWallet, setIsEtherspotWallet } = useEtherspotUiConfig();
+  const { isEtherspotWallet, setIsEtherspotWallet, etherspotIntroDisplayed, setEtherspotIntroDisplayed } = useEtherspotUiConfig();
 
   const etherspotModalLabel = isEtherspotWallet
     ? t`Deposit to your Account Abstraction wallet for following tokens on Arbitrum.`
@@ -103,7 +103,7 @@ function AddressDropdown({ account, accountUrl, disconnectAccountAndCloseSetting
         setIsVisible={setIsEtherspotModalOpen}
         label={etherspotModalLabel}
       >
-        {!isEtherspotWallet && (
+        {!etherspotIntroDisplayed && (
           <>
             <Trans>Unlock a seamless and hassle-free trading experience with the power of Account Abstraction.</Trans><br/><br/>
             <Trans>All it takes is enabling 1-Click Trading, which allows you to effortlessly create your wallet and deposit tokens.</Trans><br/><br/>
@@ -127,6 +127,7 @@ function AddressDropdown({ account, accountUrl, disconnectAccountAndCloseSetting
               variant="primary-action"
               className="w-full mt-md"
               onClick={() => {
+                setEtherspotIntroDisplayed(true);
                 setIsEtherspotModalOpen(false);
                 setIsEtherspotWallet(true);
               }}
@@ -135,17 +136,17 @@ function AddressDropdown({ account, accountUrl, disconnectAccountAndCloseSetting
             </Button>
           </>
         )}
-        {isEtherspotWallet && (
+        {etherspotIntroDisplayed && (
           <>
             <Button
               variant="secondary"
               className="w-full mt-md"
               onClick={() => {
                 setIsEtherspotModalOpen(false);
-                setIsEtherspotWallet(false);
+                setIsEtherspotWallet(!isEtherspotWallet);
               }}
             >
-              <Trans>Disable ⚡️ 1-Click Trading</Trans>
+              <Trans>{isEtherspotWallet ? 'Disable' : 'Enable'} ⚡️ 1-Click Trading</Trans>
             </Button>
           </>
         )}
