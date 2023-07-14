@@ -13,9 +13,8 @@ import { FaChevronDown } from "react-icons/fa";
 import { createBreakpoint, useCopyToClipboard } from "react-use";
 import "./AddressDropdown.scss";
 import ExternalLink from "components/ExternalLink/ExternalLink";
-import ModalWithPortal from "../Modal/ModalWithPortal";
-import Button from "../Button/Button";
 import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
+import { EtherspotSettingsModal } from "../ModalViews/EtherspotSettingsModal";
 
 type Props = {
   account: string;
@@ -30,11 +29,7 @@ function AddressDropdown({ account, accountUrl, disconnectAccountAndCloseSetting
   const { ensName } = useENS(account);
   const { provider: ethereumProvider } = useJsonRpcProvider(ETH_MAINNET);
   const [isEtherspotModalOpen, setIsEtherspotModalOpen] = useState(false);
-  const { isEtherspotWallet, setIsEtherspotWallet, etherspotIntroDisplayed, setEtherspotIntroDisplayed } = useEtherspotUiConfig();
-
-  const etherspotModalLabel = isEtherspotWallet
-    ? t`Deposit to your Account Abstraction wallet for following tokens on Arbitrum.`
-    : t`Account Abstraction`;
+  const { isEtherspotWallet } = useEtherspotUiConfig();
 
   return (
     <Menu>
@@ -97,60 +92,10 @@ function AddressDropdown({ account, accountUrl, disconnectAccountAndCloseSetting
           </Menu.Item>
         </Menu.Items>
       </div>
-      <ModalWithPortal
-        className="etherspot-enable-popup"
-        isVisible={isEtherspotModalOpen}
-        setIsVisible={setIsEtherspotModalOpen}
-        label={etherspotModalLabel}
-      >
-        {!etherspotIntroDisplayed && (
-          <>
-            <Trans>Unlock a seamless and hassle-free trading experience with the power of Account Abstraction.</Trans><br/><br/>
-            <Trans>All it takes is enabling 1-Click Trading, which allows you to effortlessly create your wallet and deposit tokens.</Trans><br/><br/>
-            <Trans>Here's how it works:</Trans><br/><br/>
-            <div className="feature-item">
-              <span>💰</span>
-              <Trans>Deposit your tokens into a self-custodial AA wallet, where you retain full control.</Trans>
-            </div>
-            <div className="feature-item">
-              <span>✍️</span>
-              <Trans>Bid farewell to the need for multiple transaction signatures when opening or closing positions.</Trans>
-            </div>
-            <div className="feature-item">
-              <span>👌</span>
-              <Trans>Leave behind the requirement for gas tokens; now you can conveniently pay for gas using your tokens.</Trans>
-            </div>
-            <p className="center secondary">
-              <Trans>With <span>Account Abstraction</span>, trading becomes smoother than ever before, ensuring a streamlined process for traders.</Trans>
-            </p>
-            <Button
-              variant="primary-action"
-              className="w-full mt-md"
-              onClick={() => {
-                setEtherspotIntroDisplayed(true);
-                setIsEtherspotModalOpen(false);
-                setIsEtherspotWallet(true);
-              }}
-            >
-              <Trans>Enable ⚡️ 1-Click Trading</Trans>
-            </Button>
-          </>
-        )}
-        {etherspotIntroDisplayed && (
-          <>
-            <Button
-              variant="secondary"
-              className="w-full mt-md"
-              onClick={() => {
-                setIsEtherspotModalOpen(false);
-                setIsEtherspotWallet(!isEtherspotWallet);
-              }}
-            >
-              <Trans>{isEtherspotWallet ? 'Disable' : 'Enable'} ⚡️ 1-Click Trading</Trans>
-            </Button>
-          </>
-        )}
-      </ModalWithPortal>
+      <EtherspotSettingsModal
+        isEtherspotModalOpen={isEtherspotModalOpen}
+        setIsEtherspotModalOpen={setIsEtherspotModalOpen}
+      />
     </Menu>
   );
 }
