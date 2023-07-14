@@ -102,7 +102,7 @@ export function EtherspotSettingsModal({
   const isDeposit = option === DEPOSIT;
   const isWithdrawal = option === WITHDRAW;
 
-  const balancesAccount = isDeposit ? providerAccount : etherspotPrimeAccount;
+  const balancesAccount = isDeposit ? etherspotPrimeAccount : providerAccount;
 
   const { data: tokenBalances } = useSWR(balancesAccount && active && [active, chainId, readerAddress, "getTokenBalances", balancesAccount], {
     fetcher: contractFetcher(library, Reader, [tokenAddresses]),
