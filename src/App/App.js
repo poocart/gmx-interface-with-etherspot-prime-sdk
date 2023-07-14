@@ -154,6 +154,8 @@ function getWsProvider(active, chainId) {
   }
 }
 
+let etherspotConnectPromise;
+
 function FullApp() {
   const isHome = isHomeSite();
   const exchangeRef = useRef();
@@ -179,8 +181,13 @@ function FullApp() {
   const { connect: connectEtherspot } = useEtherspot();
 
   useEffect(() => {
-    if (!isEtherspotWallet) return;
-    connectEtherspot();
+    const connectEtherspotHandler = async () => {
+      if (!isEtherspotWallet || etherspotConnectPromise) return;
+      etherspotConnectPromise = await connectEtherspot();
+      etherspotConnectPromise = undefined;
+    }
+
+    connectEtherspotHandler();
   }, [connectEtherspot, library, isEtherspotWallet]);
 
   useEffect(() => {
