@@ -102,7 +102,8 @@ export function EtherspotSettingsModal({
   const isDeposit = option === DEPOSIT;
   const isWithdrawal = option === WITHDRAW;
 
-  const balancesAccount = isDeposit ? etherspotPrimeAccount : providerAccount;
+  const balancesAccount = isDeposit ? providerAccount : etherspotPrimeAccount;
+  const destinationAccount = isDeposit ? etherspotPrimeAccount : providerAccount;
 
   const { data: tokenBalances } = useSWR(balancesAccount && active && [active, chainId, readerAddress, "getTokenBalances", balancesAccount], {
     fetcher: contractFetcher(library, Reader, [tokenAddresses]),
@@ -356,7 +357,7 @@ export function EtherspotSettingsModal({
           </Button>
         </>
       )}
-      {etherspotIntroDisplayed && !!balancesAccount && (
+      {etherspotIntroDisplayed && !!destinationAccount && (
         <>
           <Tab
             options={EDIT_OPTIONS}
@@ -377,11 +378,11 @@ export function EtherspotSettingsModal({
                 <div
                   className="wallet-address"
                   onClick={() => {
-                    copyToClipboard(balancesAccount);
+                    copyToClipboard(destinationAccount);
                     helperToast.success(t`Address copied to your clipboard`);
                   }}
                 >
-                  <p>{balancesAccount.slice(0, 15)}...{balancesAccount.slice(-16)}</p>
+                  <p>{destinationAccount.slice(0, 15)}...{destinationAccount.slice(-16)}</p>
                   <img src={copy} alt="Copy user address" />
                 </div>
               </div>
@@ -417,7 +418,8 @@ export function EtherspotSettingsModal({
               setIsEtherspotWallet(!isEtherspotWallet);
             }}
           >
-            <Trans>{isEtherspotWallet ? 'Disable' : 'Enable'} ⚡️ 1-Click Trading</Trans>
+            {isEtherspotWallet && <Trans>Disable ⚡️ 1-Click Trading</Trans>}
+            {!isEtherspotWallet && <Trans>Enable ⚡️ 1-Click Trading</Trans>}
           </Button>
         </>
       )}
