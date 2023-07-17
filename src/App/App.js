@@ -10,10 +10,7 @@ import { ethers } from "ethers";
 import { Web3ReactProvider, useWeb3React } from "@web3-react/core";
 import { Web3Provider } from "@ethersproject/providers";
 import useScrollToTop from "lib/useScrollToTop";
-import {
-  EtherspotTransactionKit,
-  useEtherspot
-} from "@etherspot/transaction-kit";
+import { EtherspotTransactionKit } from "@etherspot/transaction-kit";
 
 import { Switch, Route, HashRouter as Router, Redirect, useLocation, useHistory } from "react-router-dom";
 
@@ -116,7 +113,7 @@ import {
 } from "config/env";
 import Button from "components/Button/Button";
 import { roundToTwoDecimals } from "lib/numbers";
-import useEtherspotUiConfig, { EtherspotUiConfigContext } from "../hooks/useEtherspotUiConfig";
+import { EtherspotUiConfigContext } from "../hooks/useEtherspotUiConfig";
 
 if (window?.ethereum?.autoRefreshOnNetworkChange) {
   window.ethereum.autoRefreshOnNetworkChange = false;
@@ -176,19 +173,6 @@ function FullApp() {
   useHandleUnsupportedNetwork();
 
   const query = useRouteQuery();
-
-  const { isEtherspotWallet } = useEtherspotUiConfig();
-  const { connect: connectEtherspot } = useEtherspot();
-
-  useEffect(() => {
-    const connectEtherspotHandler = async () => {
-      if (!isEtherspotWallet || etherspotConnectPromise) return;
-      etherspotConnectPromise = await connectEtherspot();
-      etherspotConnectPromise = undefined;
-    }
-
-    connectEtherspotHandler();
-  }, [connectEtherspot, library, isEtherspotWallet]);
 
   useEffect(() => {
     let referralCode = query.get(REFERRAL_CODE_QUERY_PARAM);
