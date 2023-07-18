@@ -11,7 +11,7 @@ export const ETH_MAINNET = 1;
 export const AVALANCHE = 43114;
 export const AVALANCHE_FUJI = 43113;
 export const ARBITRUM = 42161;
-export const ARBITRUM_TESTNET = 421611;
+export const ARBITRUM_TESTNET = 421613;
 export const FEES_HIGH_BPS = 50;
 
 // TODO take it from web3
@@ -32,7 +32,7 @@ export const IS_NETWORK_DISABLED = {
 export const CHAIN_NAMES_MAP = {
   [MAINNET]: "BSC",
   [TESTNET]: "BSC Testnet",
-  [ARBITRUM_TESTNET]: "ArbRinkeby",
+  [ARBITRUM_TESTNET]: "Arbitrum Goerli",
   [ARBITRUM]: "Arbitrum",
   [AVALANCHE]: "Avalanche",
   [AVALANCHE_FUJI]: "Avalanche Fuji",
@@ -146,7 +146,11 @@ export const RPC_PROVIDERS = {
   ],
   [TESTNET]: ["https://data-seed-prebsc-1-s1.binance.org:8545/"],
   [ARBITRUM]: [getDefaultArbitrumRpcUrl()],
-  [ARBITRUM_TESTNET]: ["https://rinkeby.arbitrum.io/rpc"],
+  [ARBITRUM_TESTNET]: [
+    "https://goerli-rollup.arbitrum.io/rpc",
+    "https://endpoints.omniatech.io/v1/arbitrum/goerli/public",
+    "https://arbitrum-goerli.public.blastapi.io",
+  ],
   [AVALANCHE]: ["https://api.avax.network/ext/bc/C/rpc"],
   [AVALANCHE_FUJI]: ["https://api.avax-test.network/ext/bc/C/rpc"],
 };
@@ -181,14 +185,14 @@ export const NETWORK_METADATA: { [chainId: number]: NetworkMetadata } = {
   },
   [ARBITRUM_TESTNET]: {
     chainId: "0x" + ARBITRUM_TESTNET.toString(16),
-    chainName: "Arbitrum Testnet",
+    chainName: "Arbitrum Goerli Testnet",
     nativeCurrency: {
       name: "ETH",
       symbol: "ETH",
       decimals: 18,
     },
     rpcUrls: RPC_PROVIDERS[ARBITRUM_TESTNET],
-    blockExplorerUrls: ["https://rinkeby-explorer.arbitrum.io/"],
+    blockExplorerUrls: ["https://goerli.arbiscan.io/"],
   },
   [ARBITRUM]: {
     chainId: "0x" + ARBITRUM.toString(16),
@@ -281,7 +285,7 @@ export function getExplorerUrl(chainId, isEtherspot = false) {
   } else if (chainId === TESTNET) {
     return "https://testnet.bscscan.com/";
   } else if (chainId === ARBITRUM_TESTNET) {
-    return "https://testnet.arbiscan.io/";
+    return "https://goerli.arbiscan.io/";
   } else if (chainId === ARBITRUM) {
     return "https://arbiscan.io/";
   } else if (chainId === AVALANCHE) {

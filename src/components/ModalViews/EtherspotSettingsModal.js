@@ -165,11 +165,11 @@ export function EtherspotSettingsModal({
       try {
         await sendNativeValue(library.getSigner(), chainId, receiver, amount, {
           sender,
-          sentMsg: t`${option} transaction submitted!`,
+          sentMsg: option + ' ' + t`transaction submitted!`,
           successMsg: t`${successAction} ${formatAmount(amount, tokens.decimals, 4, true)} ${
             token.symbol
           }!`,
-          failMsg: t`${option} failed.`,
+          failMsg: option + ' ' + t`failed.`,
           etherspotPrimeSdk: isWithdrawal && await getEtherspotPrimeSdkForChainId(42161),
         });
       } catch (e) {
@@ -182,11 +182,11 @@ export function EtherspotSettingsModal({
     try {
       const contract = new ethers.Contract(tokenAddress, Token.abi, library.getSigner());
       await callContract(chainId, contract, "transfer", [receiver, amount], {
-        sentMsg: t`${option} transaction submitted!`,
+        sentMsg: option + ' ' + t`transaction submitted!`,
         successMsg: t`${successAction} ${formatAmount(amount, tokens.decimals, 4, true)} ${
           token.symbol
         }!`,
-        failMsg: t`${option} failed.`,
+        failMsg: option + ' ' + t`failed.`,
         etherspotPrimeSdk: isWithdrawal && await getEtherspotPrimeSdkForChainId(42161),
       })
     } catch (e) {
