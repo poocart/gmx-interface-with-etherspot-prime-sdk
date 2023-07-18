@@ -12,7 +12,7 @@ import { Web3Provider } from "@ethersproject/providers";
 import useScrollToTop from "lib/useScrollToTop";
 import { EtherspotTransactionKit } from "@etherspot/transaction-kit";
 
-import { Switch, Route, HashRouter as Router, Redirect, useLocation, useHistory } from "react-router-dom";
+import { Switch, Route, HashRouter as Router, useLocation, useHistory } from "react-router-dom";
 
 import {
   DEFAULT_SLIPPAGE_AMOUNT,
@@ -150,8 +150,6 @@ function getWsProvider(active, chainId) {
     return avaxWsProvider;
   }
 }
-
-let etherspotConnectPromise;
 
 function FullApp() {
   const isHome = isHomeSite();
@@ -479,9 +477,6 @@ function FullApp() {
           {!isHome && (
             <Switch>
               <Route exact path="/">
-                <Redirect to="/dashboard" />
-              </Route>
-              <Route exact path="/trade">
                 <Exchange
                   ref={exchangeRef}
                   savedShowPnlAfterFees={savedShowPnlAfterFees}

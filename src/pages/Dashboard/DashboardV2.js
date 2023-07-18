@@ -329,7 +329,7 @@ export default function DashboardV2() {
                       buy GLP
                     </Link>{" "}
                     with {tokenInfo.symbol}, and to{" "}
-                    <Link to="/trade" target="_blank" rel="noopener noreferrer">
+                    <Link to="/" target="_blank" rel="noopener noreferrer">
                       swap
                     </Link>{" "}
                     {tokenInfo.symbol} for other tokens.
@@ -343,7 +343,7 @@ export default function DashboardV2() {
                     <br />
                     <br />
                     Get lower fees to{" "}
-                    <Link to="/trade" target="_blank" rel="noopener noreferrer">
+                    <Link to="/" target="_blank" rel="noopener noreferrer">
                       swap
                     </Link>{" "}
                     tokens for {tokenInfo.symbol}.

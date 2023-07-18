@@ -862,7 +862,7 @@ export default function StakeV1() {
               </div>
             </div>
             <div className="App-card-options">
-              <Link className="App-button-option App-card-option" to="/trade">
+              <Link className="App-button-option App-card-option" to="/">
                 Get USDG
               </Link>
               {active && (
