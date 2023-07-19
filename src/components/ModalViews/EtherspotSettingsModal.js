@@ -125,7 +125,7 @@ export function EtherspotSettingsModal({
   };
 
   const etherspotModalLabel = etherspotIntroDisplayed
-    ? t`Deposit to your Account Abstraction wallet for following tokens on Arbitrum`
+    ? t`Manage your Account Abstraction Wallet`
     : t`Account Abstraction`;
 
   const balance = tokenInfo ? tokenInfo.balance : bigNumberify(0);
