@@ -23,7 +23,6 @@ import {
   REFERRAL_CODE_QUERY_PARAM,
 } from "lib/legacy";
 
-import Home from "pages/Home/Home";
 import Dashboard from "pages/Dashboard/Dashboard";
 import Stats from "pages/Stats/Stats";
 import ReferralsTier from "pages/ReferralsTier/ReferralsTier";
