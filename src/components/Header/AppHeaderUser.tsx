@@ -12,7 +12,7 @@ import cx from "classnames";
 import { Trans } from "@lingui/macro";
 import NetworkDropdown from "../NetworkDropdown/NetworkDropdown";
 import LanguagePopupHome from "../NetworkDropdown/LanguagePopupHome";
-import { ARBITRUM, ARBITRUM_TESTNET, AVALANCHE, AVALANCHE_FUJI, getChainName } from "config/chains";
+import { ARBITRUM, ARBITRUM_TESTNET, getChainName } from "config/chains";
 import { switchNetwork } from "lib/wallets";
 import { useChainId } from "lib/chains";
 import { isDevelopment } from "config/env";
