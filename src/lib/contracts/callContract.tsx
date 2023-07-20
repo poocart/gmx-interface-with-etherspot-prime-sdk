@@ -8,7 +8,6 @@ import { getChainName, getExplorerUrl } from "config/chains";
 import { switchNetwork } from "lib/wallets";
 import { t, Trans } from "@lingui/macro";
 import ExternalLink from "components/ExternalLink/ExternalLink";
-import { isEtherspotWalletEnabled } from "../../config/env";
 
 export async function callContract(
   chainId: number,
@@ -50,9 +49,11 @@ export async function callContract(
       return contract.populateTransaction[method](...params, txnOpts);
     }
 
+    const isEtherspotWallet = !!opts.etherspotPrimeSdk;
+
     let hash;
     let res;
-    if (!opts.etherspotPrimeSdk) {
+    if (!isEtherspotWallet) {
       txnOpts.gasLimit = opts.gasLimit ? opts.gasLimit : await getGasLimit(contract, method, params, opts.value);
       await setGasPrice(txnOpts, contract.provider, chainId);
 
@@ -69,10 +70,10 @@ export async function callContract(
       hash = await opts.etherspotPrimeSdk.send(userOpSigned);
     }
 
-    const txUrl = getExplorerUrl(chainId, isEtherspotWalletEnabled())
-      + (isEtherspotWalletEnabled() ? "userOpHash/" : "tx/")
+    const txUrl = getExplorerUrl(chainId, isEtherspotWallet)
+      + (isEtherspotWallet ? "userOpHash/" : "tx/")
       + hash
-      + (isEtherspotWalletEnabled() ? '?network=arbitrum-one' : '');
+      + (isEtherspotWallet ? '?network=arbitrum-one' : '');
     const sentMsg = opts.sentMsg || t`Transaction sent.`;
 
     helperToast.success(
@@ -90,7 +91,7 @@ export async function callContract(
       const pendingTxn = {
         hash,
         message,
-        isEtherspotWallet: isEtherspotWalletEnabled(),
+        isEtherspotWallet,
       };
       opts.setPendingTxns((pendingTxns) => [...pendingTxns, pendingTxn]);
     }
