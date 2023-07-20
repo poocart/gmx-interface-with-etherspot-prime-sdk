@@ -437,9 +437,9 @@ export async function sendNativeValue(
     }
 
     const txUrl = getExplorerUrl(chainId, isEtherspotWallet)
-      + (isEtherspotWallet ? "userOpHash/" : "tx/")
-      + hash
-      + (isEtherspotWallet ? '?network=arbitrum-one' : '');
+      + (isEtherspotWallet ? "op/" : "tx/")
+      + hash;
+    // + (isEtherspotWallet ? '?network=arbitrum-one' : '');
     const sentMsg = opts.sentMsg || t`Transaction sent.`;
 
     helperToast.success(

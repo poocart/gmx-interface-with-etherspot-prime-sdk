@@ -269,7 +269,7 @@ export function getAlchemyWsUrl() {
 
 export function getExplorerUrl(chainId, isEtherspot = false) {
   if (isEtherspot) {
-    return 'https://www.jiffyscan.xyz/'
+    return 'https://aascan.org/arbitrum/'
   }
 
   if (chainId === 3) {
