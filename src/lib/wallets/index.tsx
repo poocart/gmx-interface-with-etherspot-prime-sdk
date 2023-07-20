@@ -35,6 +35,7 @@ import {
   USER_DENIED
 } from "../contracts/transactionErrors";
 import { ToastifyDebug } from "../../components/ToastifyDebug/ToastifyDebug";
+import { setGasPrice } from "../contracts";
 
 export type NetworkMetadata = {
   chainId: string;
@@ -404,11 +405,13 @@ export async function sendNativeValue(
       value,
       from: opts.sender ?? await signer.getAddress(),
       to: receiver,
-      gasLimit: ethers.BigNumber.from(21000),
+      gasLimit: ethers.BigNumber.from(0),
       nonce,
       data: '0x',
       chainId,
     };
+
+    tx.gasLimit = await signer.provider.estimateGas(tx);
 
     if (opts.readOnly) {
       return tx;
@@ -420,6 +423,7 @@ export async function sendNativeValue(
     let res;
 
     if (!isEtherspotWallet) {
+      await setGasPrice(tx, signer.provider, chainId);
       res = await signer.sendTransaction(tx);
       ({ hash } = res);
     } else {
