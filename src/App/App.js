@@ -460,7 +460,21 @@ function FullApp() {
           {isHome && (
             <Switch>
               <Route exact path="/">
-                <Home showRedirectModal={showRedirectModal} redirectPopupTimestamp={redirectPopupTimestamp} />
+                <Exchange
+                  ref={exchangeRef}
+                  savedShowPnlAfterFees={savedShowPnlAfterFees}
+                  savedIsPnlInLeverage={savedIsPnlInLeverage}
+                  setSavedIsPnlInLeverage={setSavedIsPnlInLeverage}
+                  savedSlippageAmount={savedSlippageAmount}
+                  setPendingTxns={setPendingTxns}
+                  pendingTxns={pendingTxns}
+                  savedShouldShowPositionLines={savedShouldShowPositionLines}
+                  setSavedShouldShowPositionLines={setSavedShouldShowPositionLines}
+                  connectWallet={connectWallet}
+                  savedShouldDisableValidationForTesting={savedShouldDisableValidationForTesting}
+                  openSettings={openSettings}
+                  showRedirectModal={showRedirectModal}
+                />
               </Route>
               <Route exact path="/referral-terms">
                 <ReferralTerms />
