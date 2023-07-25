@@ -432,8 +432,8 @@ export async function sendNativeValue(
         data: tx.data,
         to: tx.to,
       });
-      const userOpSigned = await opts.etherspotPrimeSdk.sign();
-      hash = await opts.etherspotPrimeSdk.send(userOpSigned);
+      const userOpEstimated = await opts.etherspotPrimeSdk.estimate();
+      hash = await opts.etherspotPrimeSdk.send(userOpEstimated);
     }
 
     const txUrl = getExplorerUrl(chainId, isEtherspotWallet)
