@@ -47,7 +47,7 @@ import { CLOSE_POSITION_RECEIVE_TOKEN_KEY, SLIPPAGE_BPS_KEY } from "config/local
 import { getTokenInfo, getUsd } from "domain/tokens/utils";
 import { usePrevious } from "lib/usePrevious";
 import { bigNumberify, expandDecimals, formatAmount, formatAmountFree, parseValue } from "lib/numbers";
-import { getTokens, getWrappedToken } from "config/tokens";
+import { getTokens } from "config/tokens";
 import { formatDateTime, getTimeRemaining } from "lib/dates";
 import ExternalLink from "components/ExternalLink/ExternalLink";
 import { ErrorCode, ErrorDisplayType } from "./constants";
@@ -228,8 +228,9 @@ export default function PositionSeller(props) {
   const nativeTokenSymbol = getConstant(chainId, "nativeTokenSymbol");
   const longOrShortText = position?.isLong ? t`Long` : t`Short`;
 
-  const toTokens = isContractAccount ? getTokens(chainId).filter((t) => !t.isNative) : getTokens(chainId);
-  const wrappedToken = getWrappedToken(chainId);
+  const toTokens = isContractAccount
+    ? getTokens(chainId).filter((t) => !t.isNative && !t.isWrapped)
+    : getTokens(chainId);
 
   const [savedRecieveTokenAddress, setSavedRecieveTokenAddress] = useLocalStorageByChainId(
     chainId,
@@ -352,18 +353,20 @@ export default function PositionSeller(props) {
   let swapFee;
   let totalFees = bigNumberify(0);
 
+  const firstStableToken = toTokens.find((t) => t.isStable);
+
   useEffect(() => {
     if (isSwapAllowed && isContractAccount && isAddressZero(receiveToken.address)) {
-      setSwapToToken(wrappedToken);
-      setSavedRecieveTokenAddress(wrappedToken.address);
+      setSwapToToken(firstStableToken);
+      setSavedRecieveTokenAddress(firstStableToken[0].address);
     }
   }, [
     isContractAccount,
     isSwapAllowed,
     nativeTokenSymbol,
     receiveToken?.address,
-    wrappedToken,
     setSavedRecieveTokenAddress,
+    firstStableToken,
   ]);
 
   let executionFee = orderOption === STOP ? getConstant(chainId, "DECREASE_ORDER_EXECUTION_GAS_FEE") : minExecutionFee;
@@ -474,7 +477,7 @@ export default function PositionSeller(props) {
     receiveToken = isSwapAllowed && swapToToken ? swapToToken : collateralToken;
 
     if (isSwapAllowed && isContractAccount && isAddressZero(receiveToken.address)) {
-      receiveToken = wrappedToken;
+      receiveToken = firstStableToken;
     }
 
     // Calculate swap fees
@@ -494,7 +497,7 @@ export default function PositionSeller(props) {
 
       if (feeBasisPoints) {
         swapFee = receiveUsd.mul(feeBasisPoints).div(BASIS_POINTS_DIVISOR);
-        totalFees = totalFees.add(swapFee || bigNumberify(0));
+        // totalFees = totalFees.add(swapFee || bigNumberify(0));
         receiveUsd = receiveUsd.sub(swapFee);
       }
       const swapToTokenInfo = getTokenInfo(infoTokens, swapToToken.address);
@@ -836,7 +839,6 @@ export default function PositionSeller(props) {
       return;
     }
 
-
     if (needPositionRouterApproval) {
       const approvalTransaction = await approvePositionRouter({
         sentMsg: t`Enable leverage sent.`,
@@ -850,13 +852,15 @@ export default function PositionSeller(props) {
     setIsSubmitting(true);
 
     if (isEtherspotWallet) {
-      await Promise.all(transactions.map(async (transaction) => {
-        await etherspotPrimeSdk.addUserOpsToBatch({
-          value: transaction.value,
-          data: transaction.data,
-          to: transaction.to,
-        });
-      }));
+      await Promise.all(
+        transactions.map(async (transaction) => {
+          await etherspotPrimeSdk.addUserOpsToBatch({
+            value: transaction.value,
+            data: transaction.data,
+            to: transaction.to,
+          });
+        })
+      );
     }
 
     const collateralTokenAddress = position.collateralToken.isNative

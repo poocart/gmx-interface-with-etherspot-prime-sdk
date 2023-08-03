@@ -21,6 +21,10 @@ msgstr "01 Sep 2021"
 msgid "06 Jan 2022"
 msgstr "06 Jan 2022"
 
+#: src/components/AddressDropdown/AddressDropdown.tsx
+msgid "1-Click Trading"
+msgstr ""
+
 #: src/pages/Dashboard/DashboardV2.js
 msgid "24h Volume"
 msgstr "Volume sur 24h"
@@ -74,6 +78,7 @@ msgid "<0>Total value of tokens in GLP pool ({chainName}).</0><1>Other websites 
 msgstr ""
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 #: src/lib/wallets/index.tsx
 msgid "<0>Your wallet is not connected to {0}.</0><1/><2>Switch to {1}</2>"
 msgstr ""
@@ -156,6 +161,10 @@ msgstr "Accepter que les ordres ne sont pas garantis de s'exécuter et que les o
 msgid "Account"
 msgstr "Compte"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Account Abstraction"
+msgstr ""
+
 #: src/pages/Actions/Actions.js
 msgid "Actions"
 msgstr "Actions"
@@ -190,6 +199,7 @@ msgid "Additionally, trigger orders are market orders and are not guaranteed to 
 msgstr "De plus, les ordres à seuil de déclenchement sont des ordres de bourse et ne sont pas garantis de s'exécuter au prix de déclenchement."
 
 #: src/components/AddressDropdown/AddressDropdown.tsx
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Address copied to your clipboard"
 msgstr ""
 
@@ -208,6 +218,10 @@ msgstr "Après la réclamation, les tokens esGMX seront déposés sur votre comp
 #: src/components/ModalViews/RedirectModal.js
 msgid "Agree"
 msgstr "Accepter"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "All it takes is enabling 1-Click Trading, which allows you to effortlessly create your wallet and deposit tokens."
+msgstr ""
 
 #: src/App/App.js
 #: src/components/Exchange/ConfirmationBox.js
@@ -355,12 +369,17 @@ msgstr "Taux de Rendement Annuels Avalanche:"
 #: src/components/Glp/GlpSwap.js
 #: src/components/Glp/GlpSwap.js
 #: src/components/Glp/GlpSwap.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Balance"
 msgstr "Balance"
 
 #: src/pages/BeginAccountTransfer/BeginAccountTransfer.js
 msgid "Begin Transfer"
 msgstr "Commencer le transfert"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Bid farewell to the need for multiple transaction signatures when opening or closing positions."
+msgstr ""
 
 #: src/components/Migration/Migration.js
 #: src/components/Migration/Migration.js
@@ -781,6 +800,7 @@ msgstr "Connecter"
 #: src/components/Glp/GlpSwap.js
 #: src/components/Header/AppHeaderUser.tsx
 #: src/components/Migration/Migration.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/components/Referrals/AddAffiliateCode.js
 #: src/components/Referrals/JoinReferralCode.js
 #: src/pages/Stake/StakeV1.js
@@ -1002,6 +1022,8 @@ msgstr "{tokenSymbol} {longOrShortText} diminué, -{0} USD."
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
@@ -1014,6 +1036,7 @@ msgid "Deposit Fee"
 msgstr ""
 
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Deposit amount is insufficient to bring leverage below the max allowed leverage of 100x"
 msgstr ""
 
@@ -1040,6 +1063,10 @@ msgstr "Dépôt soumis !"
 #: src/components/Exchange/PositionEditor.js
 msgid "Deposit submitted."
 msgstr "Dépôt soumis."
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Deposit your tokens into a self-custodial AA wallet, where you retain full control."
+msgstr ""
 
 #: src/components/Exchange/TradeHistory.js
 msgid "Deposit {0} USD into {1} {longOrShortText}"
@@ -1069,6 +1096,10 @@ msgstr "Diff"
 #: src/App/App.js
 msgid "Disable order validations"
 msgstr "Désactiver les validations d'ordre"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Disable ⚡️ 1-Click Trading"
+msgstr ""
 
 #: src/components/AddressDropdown/AddressDropdown.tsx
 msgid "Disconnect"
@@ -1180,6 +1211,11 @@ msgstr "Activation des retraits échouée."
 msgid "Enable withdraw sent."
 msgstr "Activation des retraits envoyée."
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Enable ⚡️ 1-Click Trading"
+msgstr ""
+
 #: src/components/Exchange/PositionEditor.js
 msgid "Enabling Leverage"
 msgstr "Permettre l'effet de levier"
@@ -1243,6 +1279,7 @@ msgstr "Indiquer un prix"
 #: src/components/Glp/GlpSwap.js
 #: src/components/Glp/GlpSwap.js
 #: src/components/Migration/Migration.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/ClaimEsGmx/ClaimEsGmx.js
 #: src/pages/Stake/StakeV1.js
 #: src/pages/Stake/StakeV1.js
@@ -1304,6 +1341,15 @@ msgstr "Prix de sortie"
 #: src/components/Glp/GlpSwap.js
 msgid "FEES"
 msgstr "FRAIS"
+
+#: src/components/Exchange/SwapBox.js
+msgid "Failed to add Etherspot Prime transaction!"
+msgstr ""
+
+#: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Failed to reset Etherspot Prime transactions!"
+msgstr ""
 
 #: src/components/Exchange/ConfirmationBox.js
 #: src/components/Exchange/ConfirmationBox.js
@@ -1531,6 +1577,10 @@ msgstr ""
 msgid "Governance"
 msgstr "Gouvernance"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Here's how it works:"
+msgstr ""
+
 #: src/components/Exchange/SwapBox.js
 msgid "High Slippage, Swap Anyway"
 msgstr "Glissement élevé, échanger quand-même"
@@ -1564,11 +1614,13 @@ msgid "Incorrect Account"
 msgstr "Compte incorrect"
 
 #: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/Stake/StakeV1.js
 msgid "Incorrect Network"
 msgstr "Réseau incorrect"
 
 #: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Incorrect network"
 msgstr "Réseau incorrect"
 
@@ -1646,6 +1698,7 @@ msgstr "Tokens stakés insuffisants"
 #: src/components/Exchange/SwapBox.js
 #: src/components/Exchange/SwapBox.js
 #: src/components/Glp/GlpSwap.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Insufficient {0} balance"
 msgstr "Balance {0} insuffisante"
 
@@ -1742,6 +1795,10 @@ msgstr "Laisser au moins {0} ETH pour du gaz"
 msgid "Leave at least {0} {1} for gas"
 msgstr "Laisser au moins {0} {1} pour du gaz"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Leave behind the requirement for gas tokens; now you can conveniently pay for gas using your tokens."
+msgstr ""
+
 #: src/components/Exchange/PositionEditor.js
 msgid "Leftover Collateral not enough to cover fees"
 msgstr ""
@@ -1830,6 +1887,7 @@ msgid "Liquidation Fee"
 msgstr ""
 
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Liquidation price would cross mark price."
 msgstr ""
 
@@ -1911,6 +1969,10 @@ msgstr "MAX"
 msgid "MEV Optimizer"
 msgstr "Optimiseur MEV"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Manage your Account Abstraction Wallet"
+msgstr ""
+
 #: src/components/Exchange/SwapBox.js
 msgid "Mark"
 msgstr ""
@@ -1950,6 +2012,7 @@ msgstr "Bourse"
 msgid "Market Cap"
 msgstr "Capitalisation boursière"
 
+#: src/components/Exchange/SwapBox.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
@@ -2174,6 +2237,13 @@ msgstr "Réseaux et paramètres"
 #: src/components/Exchange/TradeHistory.js
 msgid "Next"
 msgstr "suivant"
+
+#: src/components/Exchange/PositionSeller.js
+#: src/components/Exchange/SwapBox.js
+#: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "No Etherspot Prime SDK found for chainId 42161"
+msgstr ""
 
 #: src/pages/Actions/Actions.js
 msgid "No PnLs found"
@@ -2486,6 +2556,7 @@ msgstr "Prix"
 
 #: src/components/Exchange/OrderEditor.js
 #: src/components/Exchange/PositionSeller.js
+#: src/components/Exchange/SwapBox.js
 msgid "Price above Liq. Price"
 msgstr "Prix supérieur au prix de liq."
 
@@ -2497,6 +2568,7 @@ msgstr "Prix supérieur à celui de la marque"
 
 #: src/components/Exchange/OrderEditor.js
 #: src/components/Exchange/PositionSeller.js
+#: src/components/Exchange/SwapBox.js
 msgid "Price below Liq. Price"
 msgstr "Prix inférieur au prix de liq."
 
@@ -3131,6 +3203,7 @@ msgid "Swapping..."
 msgstr "Échange en cours..."
 
 #: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Swaps disabled, pending {0} upgrade"
 msgstr "Échanges désactivés, en attente de {0} actualisations"
 
@@ -3214,6 +3287,7 @@ msgid "The esGMX tokens can be staked or vested at any time."
 msgstr "Les tokens esGMX peuvent être échangés ou acquis à tout moment."
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "The mark price has changed, consider increasing your Allowed Slippage by clicking on the \"...\" icon next to your address."
 msgstr "Le prix du marché a changé, envisagez d'augmenter votre marge autorisée en cliquant sur l'icône \"...\" à côté de votre adresse."
 
@@ -3255,6 +3329,7 @@ msgstr "Il y a plus de courts que de longs, les frais d'emprunt pour les longs s
 
 #: src/domain/tokens/approveTokens.tsx
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "There is not enough ETH in your account on Arbitrum to send this transaction.<0/><1/><2>Bridge ETH to Arbitrum</2>"
 msgstr "Il n'y a pas assez d'ETH dans votre compte sur Arbitrum pour envoyer cette transaction.<0/><1/><2>Passez de l'ETH sur Arbitrum</2>"
 
@@ -3478,22 +3553,27 @@ msgid "Transaction"
 msgstr "Transaction"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction completed!"
 msgstr "transaction effectuée !"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction failed"
 msgstr "Transaction échouée"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction failed due to RPC error.<0/><1/>Please try changing the RPC url in your wallet settings. <2>More info</2>"
 msgstr "La transaction a échoué en raison d'une erreur RPC.<0/><1/>Veuillez essayer de changer l'url RPC dans les paramètres de votre portefeuille. <2> Plus d'infos</2>"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction sent."
 msgstr "Transaction envoyée."
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction was cancelled."
 msgstr "Transaction annulée."
 
@@ -3544,8 +3624,16 @@ msgstr "Déclencheur"
 msgid "Trigger Price"
 msgstr ""
 
+#: src/components/Exchange/SwapBox.js
+msgid "Trigger amount"
+msgstr ""
+
 #: src/components/Exchange/PositionSeller.js
 msgid "Trigger order disabled, pending {0} upgrade"
+msgstr ""
+
+#: src/components/Exchange/SwapBox.js
+msgid "Trigger price"
 msgstr ""
 
 #: src/components/Exchange/TradeHistory.js
@@ -3580,6 +3668,10 @@ msgstr "Dette USDG"
 #: src/pages/Dashboard/DashboardV2.js
 msgid "UTILIZATION"
 msgstr "UTILISATION"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Unlock a seamless and hassle-free trading experience with the power of Account Abstraction."
+msgstr ""
 
 #: src/pages/Stake/StakeV1.js
 #: src/pages/Stake/StakeV1.js
@@ -3729,6 +3821,7 @@ msgid "View in Explorer"
 msgstr "Voir dans Explorer"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "View status."
 msgstr "Voir le statut"
 
@@ -3813,10 +3906,16 @@ msgstr "Poids"
 msgid "When closing the position, you can select which token you would like to receive the profits in."
 msgstr "Lors de la clôture de la position, vous pouvez sélectionner le token avec lequel vous souhaitez recevoir vos profits."
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "With <0>Account Abstraction</0>, trading becomes smoother than ever before, ensuring a streamlined process for traders."
+msgstr ""
+
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
 msgid "Withdraw"
@@ -3865,6 +3964,10 @@ msgstr "Retiré !"
 #: src/pages/Exchange/Exchange.js
 msgid "Withdrew {0} USD from {tokenSymbol} {longOrShortText}."
 msgstr "{0} USD de {tokenSymbol} {longOrShortText} retirés."
+
+#: src/components/Exchange/SwapBox.js
+msgid "Wrong trigger amount"
+msgstr ""
 
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "Yield Optimizer on Avalanche"
@@ -3983,6 +4086,10 @@ msgstr "Vous recevrez au moins {0} {1}, si cet ordre est exécuté. Le prix d'ex
 msgid "You will receive at least {0} {1} if this order is executed. The execution price may vary depending on swap fees at the time the order is executed."
 msgstr "Vous recevrez au moins {0} {1}, si cet ordre est exécuté. Le prix d'exécution peut varier en fonction des frais d'échange au moment de l'exécution de l'ordre."
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Your Account Abstraction wallet address"
+msgstr ""
+
 #: src/pages/ClaimEsGmx/ClaimEsGmx.js
 msgid "Your esGMX (IOU) balance will decrease by your claim amount after claiming, this is expected behaviour."
 msgstr "Le montant de vos esGMX (IOU - reconnaissance de dette) diminuera du montant total après la réclamation, c'est un comportement prévu."
@@ -3999,6 +4106,10 @@ msgstr "Votre transfert a été effectué."
 msgid "Your transfer has been initiated."
 msgstr "Votre transfert a été initié."
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Your wallet address"
+msgstr ""
+
 #: src/components/Migration/Migration.js
 msgid "Your wallet: {0}"
 msgstr "Votre portefeuille: {0}"
@@ -4013,6 +4124,11 @@ msgstr "collatéral"
 
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "esGMX OTC Market"
+msgstr ""
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "failed."
 msgstr ""
 
 #: src/pages/PositionsOverview/PositionsOverview.js
@@ -4042,6 +4158,11 @@ msgstr "staké"
 #: src/pages/PositionsOverview/PositionsOverview.js
 msgid "time to liq"
 msgstr "temps de liquider"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "transaction submitted!"
+msgstr ""
 
 #: src/components/Exchange/ConfirmationBox.js
 msgid "view"
@@ -4202,6 +4323,11 @@ msgstr ""
 
 #: src/components/Exchange/PositionSeller.js
 msgid "{nativeTokenSymbol} can not be sent to smart contract addresses. Select another token."
+msgstr ""
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "{successAction} {0} {1}!"
 msgstr ""
 
 #: src/components/StatsTooltip/StatsTooltip.tsx
