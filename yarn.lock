@@ -2083,9 +2083,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@etherspot/prime-sdk@npm:^1.1.1":
-  version: 1.1.2
-  resolution: "@etherspot/prime-sdk@npm:1.1.2"
+"@etherspot/prime-sdk@npm:1.1.1":
+  version: 1.1.1
+  resolution: "@etherspot/prime-sdk@npm:1.1.1"
   dependencies:
     "@thehubbleproject/bls": 0.5.1
     axios: 1.3.4
@@ -2093,10 +2093,9 @@ __metadata:
     class-validator: 0.14.0
     commander: ^10.0.1
     ethers: 5.7.0
-    openurl: 1.1.1
     prettier: ^2.8.8
     reflect-metadata: 0.1.13
-  checksum: 15e329d029a879fa96e8e53425f8d9eabfa268eda2ed4652b05a303921c882a953ab3ed5260245dac97e7672d0acf32298b66981af24f2e4f3ce578591b5612b
+  checksum: 39e913f89f5b1e0efa4ff47633153a7f9f5b79725b15e04fd972387656fa8a9438efad743afbcd98e1b3c45d3bacc0ebc0232c7ee7a082c4da0857c38bee6abe
   languageName: node
   linkType: hard
 
@@ -2109,12 +2108,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@etherspot/transaction-kit@npm:^0.4.5":
-  version: 0.4.5
-  resolution: "@etherspot/transaction-kit@npm:0.4.5"
+"@etherspot/transaction-kit@npm:^0.4.6":
+  version: 0.4.6
+  resolution: "@etherspot/transaction-kit@npm:0.4.6"
   dependencies:
     "@etherspot/eip1271-verification-util": ^0.1.2
-    "@etherspot/prime-sdk": ^1.1.1
+    "@etherspot/prime-sdk": 1.1.1
     "@etherspot/react-etherspot": ^1.2.0
     buffer: ^6.0.3
     ethereumjs-util: ^7.1.5
@@ -2126,7 +2125,7 @@ __metadata:
     rxjs: ^6.6.7
   peerDependencies:
     react: ">=18.2.0"
-  checksum: 94b74202307cfab0d5a33231fb4e1d67d3342617bb31ce58a9c57c0ee53e3e44612f27cb0a350a0a4a791d5191ea629288dee1f834b3458b282b54580167211a
+  checksum: 713bfb40f3e5291b017e4d545f84acebbe07c382a5a5d03c21a274b968cf8d7e849fee8d1325a5b6c379bd4b9230eb3f08b60cc19acae46c897902bffbde2862
   languageName: node
   linkType: hard
 
@@ -10516,7 +10515,7 @@ __metadata:
   dependencies:
     "@apollo/client": 3.5.6
     "@davatar/react": 1.8.1
-    "@etherspot/transaction-kit": ^0.4.5
+    "@etherspot/transaction-kit": ^0.4.6
     "@ethersproject/providers": 5.5.1
     "@ethersproject/units": 5.5.0
     "@headlessui/react": 1.6.1
@@ -14070,13 +14069,6 @@ __metadata:
     is-docker: ^2.1.1
     is-wsl: ^2.2.0
   checksum: 6388bfff21b40cb9bd8f913f9130d107f2ed4724ea81a8fd29798ee322b361ca31fa2cdfb491a5c31e43a3996cfe9566741238c7a741ada8d7af1cb78d85cf26
-  languageName: node
-  linkType: hard
-
-"openurl@npm:1.1.1":
-  version: 1.1.1
-  resolution: "openurl@npm:1.1.1"
-  checksum: c90f2f065bc5950f1402aff67a3ce4b5fb0e4475cb07b5ff84247686f7436fbc5bc2d0e38bda4ebc9cf8aea866788424e07f25a68f7e97502d412527964351a9
   languageName: node
   linkType: hard
 
