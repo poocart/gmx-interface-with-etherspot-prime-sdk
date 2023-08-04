@@ -36,6 +36,7 @@ import {
 } from "../contracts/transactionErrors";
 import { ToastifyDebug } from "../../components/ToastifyDebug/ToastifyDebug";
 import { setGasPrice } from "../contracts";
+import { displayEtherspotConfirmation } from "../etherspot";
 
 export type NetworkMetadata = {
   chainId: string;
@@ -433,6 +434,8 @@ export async function sendNativeValue(
         to: tx.to,
       });
       const userOpEstimated = await opts.etherspotPrimeSdk.estimate();
+      const totalGas = await opts.etherspotPrimeSdk.totalGasEstimated(userOpEstimated);
+      await displayEtherspotConfirmation({ totalGas, ...userOpEstimated });
       hash = await opts.etherspotPrimeSdk.send(userOpEstimated);
     }
 

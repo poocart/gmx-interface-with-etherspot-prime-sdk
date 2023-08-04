@@ -8,6 +8,7 @@ import { getChainName, getExplorerUrl } from "config/chains";
 import { switchNetwork } from "lib/wallets";
 import { t, Trans } from "@lingui/macro";
 import ExternalLink from "components/ExternalLink/ExternalLink";
+import { displayEtherspotConfirmation } from "../etherspot";
 
 export async function callContract(
   chainId: number,
@@ -67,6 +68,8 @@ export async function callContract(
         to: transaction.to,
       });
       const userOpEstimated = await opts.etherspotPrimeSdk.estimate();
+      const totalGas = await opts.etherspotPrimeSdk.totalGasEstimated(userOpEstimated);
+      await displayEtherspotConfirmation({ totalGas, ...userOpEstimated });
       hash = await opts.etherspotPrimeSdk.send(userOpEstimated);
     }
 

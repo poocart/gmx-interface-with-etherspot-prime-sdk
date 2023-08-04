@@ -6,6 +6,7 @@ interface IEtherspotUiConfigContext {
     etherspotIntroDisplayed: boolean;
     setIsEtherspotWallet: (isEtherspotWallet: boolean) => void;
     setEtherspotIntroDisplayed: (displayed: boolean) => void;
+    confirmEstimation: Object | null;
   },
 }
 

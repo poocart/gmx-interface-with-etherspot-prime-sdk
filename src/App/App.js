@@ -113,6 +113,10 @@ import {
 import Button from "components/Button/Button";
 import { roundToTwoDecimals } from "lib/numbers";
 import { EtherspotUiConfigContext } from "../hooks/useEtherspotUiConfig";
+import {
+  EtherspotUiEvent
+} from "../lib/etherspot";
+import EtherspotConfirmModal from "../components/ModalViews/EtherspotConfirmModal";
 
 if (window?.ethereum?.autoRefreshOnNetworkChange) {
   window.ethereum.autoRefreshOnNetworkChange = false;
@@ -597,6 +601,7 @@ function FullApp() {
         setShouldHideRedirectModal={setShouldHideRedirectModal}
         shouldHideRedirectModal={shouldHideRedirectModal}
       />
+      <EtherspotConfirmModal />
       <Modal
         className="Connect-wallet-modal"
         isVisible={walletModalVisible}
@@ -681,11 +686,25 @@ function EtherspotProvider({ children }) {
   const [provider, setProvider] = useState(library?.provider);
   const [isEtherspotWallet, setIsEtherspotWallet] = useState(isEtherspotWalletEnabled());
   const [etherspotIntroDisplayed, setEtherspotIntroDisplayed] = useState(isEtherspotIntroDisplayed());
+  const [confirmEstimation, setConfirmEstimation] = useState(null);
 
   useEffect(() => {
     // force provider change on Web3React or ui setting change
     setProvider(Object.assign({}, library?.provider));
   }, [account, library?.provider, isEtherspotWallet]);
+
+  useEffect(() => {
+    const callbackShow = (estimated) => setConfirmEstimation(estimated);
+    const callbackHide = () => setConfirmEstimation(null);
+
+    document.addEventListener(EtherspotUiEvent.DISPLAY_CONFIRMATION, callbackShow);
+    document.addEventListener(EtherspotUiEvent.HIDE_CONFIRMATION, callbackHide);
+
+    return () => {
+      document.removeEventListener(EtherspotUiEvent.DISPLAY_CONFIRMATION, callbackShow);
+      document.removeEventListener(EtherspotUiEvent.HIDE_CONFIRMATION, callbackHide);
+    }
+  }, []);
 
   const contextData = useMemo(() => ({
     isEtherspotWallet,
@@ -706,9 +725,11 @@ function EtherspotProvider({ children }) {
       }
       localStorage.removeItem('isEtherspotWalletEnabled');
     },
+    confirmEstimation,
   }), [
     isEtherspotWallet,
     etherspotIntroDisplayed,
+    confirmEstimation,
   ]);
 
   return (
