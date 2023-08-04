@@ -21,7 +21,7 @@ export function HomeHeaderLinks({ small, clickCloseIcon, redirectPopupTimestamp,
     {
       label: t`App`,
       isHomeLink: true,
-      link: "/trade",
+      link: "/",
     },
     {
       label: t`Protocol`,

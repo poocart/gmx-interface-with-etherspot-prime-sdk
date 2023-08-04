@@ -10,12 +10,9 @@ import { ethers } from "ethers";
 import { Web3ReactProvider, useWeb3React } from "@web3-react/core";
 import { Web3Provider } from "@ethersproject/providers";
 import useScrollToTop from "lib/useScrollToTop";
-import {
-  EtherspotTransactionKit,
-  useEtherspot
-} from "@etherspot/transaction-kit";
+import { EtherspotTransactionKit } from "@etherspot/transaction-kit";
 
-import { Switch, Route, HashRouter as Router, Redirect, useLocation, useHistory } from "react-router-dom";
+import { Switch, Route, HashRouter as Router, useLocation, useHistory } from "react-router-dom";
 
 import {
   DEFAULT_SLIPPAGE_AMOUNT,
@@ -26,7 +23,6 @@ import {
   REFERRAL_CODE_QUERY_PARAM,
 } from "lib/legacy";
 
-import Home from "pages/Home/Home";
 import Dashboard from "pages/Dashboard/Dashboard";
 import Stats from "pages/Stats/Stats";
 import ReferralsTier from "pages/ReferralsTier/ReferralsTier";
@@ -116,7 +112,11 @@ import {
 } from "config/env";
 import Button from "components/Button/Button";
 import { roundToTwoDecimals } from "lib/numbers";
-import useEtherspotUiConfig, { EtherspotUiConfigContext } from "../hooks/useEtherspotUiConfig";
+import { EtherspotUiConfigContext } from "../hooks/useEtherspotUiConfig";
+import {
+  EtherspotUiEvent
+} from "../lib/etherspot";
+import EtherspotConfirmModal from "../components/ModalViews/EtherspotConfirmModal";
 
 if (window?.ethereum?.autoRefreshOnNetworkChange) {
   window.ethereum.autoRefreshOnNetworkChange = false;
@@ -138,8 +138,7 @@ const Zoom = cssTransition({
 
 const arbWsProvider = new ethers.providers.WebSocketProvider(getAlchemyWsUrl());
 
-const avaxWsProvider = new ethers.providers.JsonRpcProvider("https://api.avax.network/ext/bc/C/rpc");
-avaxWsProvider.pollingInterval = 2000;
+const avaxWsProvider = new ethers.providers.WebSocketProvider("wss://api.avax.network/ext/bc/C/ws");
 
 function getWsProvider(active, chainId) {
   if (!active) {
@@ -153,8 +152,6 @@ function getWsProvider(active, chainId) {
     return avaxWsProvider;
   }
 }
-
-let etherspotConnectPromise;
 
 function FullApp() {
   const isHome = isHomeSite();
@@ -176,19 +173,6 @@ function FullApp() {
   useHandleUnsupportedNetwork();
 
   const query = useRouteQuery();
-
-  const { isEtherspotWallet } = useEtherspotUiConfig();
-  const { connect: connectEtherspot } = useEtherspot();
-
-  useEffect(() => {
-    const connectEtherspotHandler = async () => {
-      if (!isEtherspotWallet || etherspotConnectPromise) return;
-      etherspotConnectPromise = await connectEtherspot();
-      etherspotConnectPromise = undefined;
-    }
-
-    connectEtherspotHandler();
-  }, [connectEtherspot, library, isEtherspotWallet]);
 
   useEffect(() => {
     let referralCode = query.get(REFERRAL_CODE_QUERY_PARAM);
@@ -479,7 +463,21 @@ function FullApp() {
           {isHome && (
             <Switch>
               <Route exact path="/">
-                <Home showRedirectModal={showRedirectModal} redirectPopupTimestamp={redirectPopupTimestamp} />
+                <Exchange
+                  ref={exchangeRef}
+                  savedShowPnlAfterFees={savedShowPnlAfterFees}
+                  savedIsPnlInLeverage={savedIsPnlInLeverage}
+                  setSavedIsPnlInLeverage={setSavedIsPnlInLeverage}
+                  savedSlippageAmount={savedSlippageAmount}
+                  setPendingTxns={setPendingTxns}
+                  pendingTxns={pendingTxns}
+                  savedShouldShowPositionLines={savedShouldShowPositionLines}
+                  setSavedShouldShowPositionLines={setSavedShouldShowPositionLines}
+                  connectWallet={connectWallet}
+                  savedShouldDisableValidationForTesting={savedShouldDisableValidationForTesting}
+                  openSettings={openSettings}
+                  showRedirectModal={showRedirectModal}
+                />
               </Route>
               <Route exact path="/referral-terms">
                 <ReferralTerms />
@@ -495,9 +493,6 @@ function FullApp() {
           {!isHome && (
             <Switch>
               <Route exact path="/">
-                <Redirect to="/dashboard" />
-              </Route>
-              <Route exact path="/trade">
                 <Exchange
                   ref={exchangeRef}
                   savedShowPnlAfterFees={savedShowPnlAfterFees}
@@ -606,6 +601,7 @@ function FullApp() {
         setShouldHideRedirectModal={setShouldHideRedirectModal}
         shouldHideRedirectModal={shouldHideRedirectModal}
       />
+      <EtherspotConfirmModal />
       <Modal
         className="Connect-wallet-modal"
         isVisible={walletModalVisible}
@@ -690,11 +686,25 @@ function EtherspotProvider({ children }) {
   const [provider, setProvider] = useState(library?.provider);
   const [isEtherspotWallet, setIsEtherspotWallet] = useState(isEtherspotWalletEnabled());
   const [etherspotIntroDisplayed, setEtherspotIntroDisplayed] = useState(isEtherspotIntroDisplayed());
+  const [confirmEstimation, setConfirmEstimation] = useState(null);
 
   useEffect(() => {
     // force provider change on Web3React or ui setting change
     setProvider(Object.assign({}, library?.provider));
   }, [account, library?.provider, isEtherspotWallet]);
+
+  useEffect(() => {
+    const callbackShow = (estimated) => setConfirmEstimation(estimated);
+    const callbackHide = () => setConfirmEstimation(null);
+
+    document.addEventListener(EtherspotUiEvent.DISPLAY_CONFIRMATION, callbackShow);
+    document.addEventListener(EtherspotUiEvent.HIDE_CONFIRMATION, callbackHide);
+
+    return () => {
+      document.removeEventListener(EtherspotUiEvent.DISPLAY_CONFIRMATION, callbackShow);
+      document.removeEventListener(EtherspotUiEvent.HIDE_CONFIRMATION, callbackHide);
+    }
+  }, []);
 
   const contextData = useMemo(() => ({
     isEtherspotWallet,
@@ -715,9 +725,11 @@ function EtherspotProvider({ children }) {
       }
       localStorage.removeItem('isEtherspotWalletEnabled');
     },
+    confirmEstimation,
   }), [
     isEtherspotWallet,
     etherspotIntroDisplayed,
+    confirmEstimation,
   ]);
 
   return (

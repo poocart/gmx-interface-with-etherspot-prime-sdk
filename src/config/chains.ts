@@ -188,7 +188,7 @@ export const NETWORK_METADATA: { [chainId: number]: NetworkMetadata } = {
       decimals: 18,
     },
     rpcUrls: RPC_PROVIDERS[ARBITRUM_TESTNET],
-    blockExplorerUrls: ["https://rinkeby-explorer.arbitrum.io/"],
+    blockExplorerUrls: ["https://goerli.arbiscan.io/"],
   },
   [ARBITRUM]: {
     chainId: "0x" + ARBITRUM.toString(16),
@@ -269,7 +269,7 @@ export function getAlchemyWsUrl() {
 
 export function getExplorerUrl(chainId, isEtherspot = false) {
   if (isEtherspot) {
-    return 'https://app.jiffyscan.xyz/'
+    return 'https://aascan.org/arbitrum/'
   }
 
   if (chainId === 3) {
@@ -281,7 +281,7 @@ export function getExplorerUrl(chainId, isEtherspot = false) {
   } else if (chainId === TESTNET) {
     return "https://testnet.bscscan.com/";
   } else if (chainId === ARBITRUM_TESTNET) {
-    return "https://testnet.arbiscan.io/";
+    return "https://goerli.arbiscan.io/";
   } else if (chainId === ARBITRUM) {
     return "https://arbiscan.io/";
   } else if (chainId === AVALANCHE) {

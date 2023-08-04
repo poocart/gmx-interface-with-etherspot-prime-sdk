@@ -102,7 +102,8 @@ export function EtherspotSettingsModal({
   const isDeposit = option === DEPOSIT;
   const isWithdrawal = option === WITHDRAW;
 
-  const balancesAccount = isDeposit ? etherspotPrimeAccount : providerAccount;
+  const balancesAccount = isDeposit ? providerAccount : etherspotPrimeAccount;
+  const destinationAccount = isDeposit ? etherspotPrimeAccount : providerAccount;
 
   const { data: tokenBalances } = useSWR(balancesAccount && active && [active, chainId, readerAddress, "getTokenBalances", balancesAccount], {
     fetcher: contractFetcher(library, Reader, [tokenAddresses]),
@@ -124,7 +125,7 @@ export function EtherspotSettingsModal({
   };
 
   const etherspotModalLabel = etherspotIntroDisplayed
-    ? t`Deposit to your Account Abstraction wallet for following tokens on Arbitrum`
+    ? t`Manage your Account Abstraction Wallet`
     : t`Account Abstraction`;
 
   const balance = tokenInfo ? tokenInfo.balance : bigNumberify(0);
@@ -164,11 +165,11 @@ export function EtherspotSettingsModal({
       try {
         await sendNativeValue(library.getSigner(), chainId, receiver, amount, {
           sender,
-          sentMsg: t`${option} transaction submitted!`,
+          sentMsg: option + ' ' + t`transaction submitted!`,
           successMsg: t`${successAction} ${formatAmount(amount, tokens.decimals, 4, true)} ${
             token.symbol
           }!`,
-          failMsg: t`${option} failed.`,
+          failMsg: option + ' ' + t`failed.`,
           etherspotPrimeSdk: isWithdrawal && await getEtherspotPrimeSdkForChainId(42161),
         });
       } catch (e) {
@@ -181,11 +182,11 @@ export function EtherspotSettingsModal({
     try {
       const contract = new ethers.Contract(tokenAddress, Token.abi, library.getSigner());
       await callContract(chainId, contract, "transfer", [receiver, amount], {
-        sentMsg: t`${option} transaction submitted!`,
+        sentMsg: option + ' ' + t`transaction submitted!`,
         successMsg: t`${successAction} ${formatAmount(amount, tokens.decimals, 4, true)} ${
           token.symbol
         }!`,
-        failMsg: t`${option} failed.`,
+        failMsg: option + ' ' + t`failed.`,
         etherspotPrimeSdk: isWithdrawal && await getEtherspotPrimeSdkForChainId(42161),
       })
     } catch (e) {
@@ -356,7 +357,7 @@ export function EtherspotSettingsModal({
           </Button>
         </>
       )}
-      {etherspotIntroDisplayed && !!balancesAccount && (
+      {etherspotIntroDisplayed && !!destinationAccount && (
         <>
           <Tab
             options={EDIT_OPTIONS}
@@ -377,11 +378,11 @@ export function EtherspotSettingsModal({
                 <div
                   className="wallet-address"
                   onClick={() => {
-                    copyToClipboard(balancesAccount);
+                    copyToClipboard(destinationAccount);
                     helperToast.success(t`Address copied to your clipboard`);
                   }}
                 >
-                  <p>{balancesAccount.slice(0, 15)}...{balancesAccount.slice(-16)}</p>
+                  <p>{destinationAccount.slice(0, 15)}...{destinationAccount.slice(-16)}</p>
                   <img src={copy} alt="Copy user address" />
                 </div>
               </div>
@@ -417,7 +418,8 @@ export function EtherspotSettingsModal({
               setIsEtherspotWallet(!isEtherspotWallet);
             }}
           >
-            <Trans>{isEtherspotWallet ? 'Disable' : 'Enable'} ⚡️ 1-Click Trading</Trans>
+            {isEtherspotWallet && <Trans>Disable ⚡️ 1-Click Trading</Trans>}
+            {!isEtherspotWallet && <Trans>Enable ⚡️ 1-Click Trading</Trans>}
           </Button>
         </>
       )}

@@ -12,7 +12,7 @@ import cx from "classnames";
 import { Trans } from "@lingui/macro";
 import NetworkDropdown from "../NetworkDropdown/NetworkDropdown";
 import LanguagePopupHome from "../NetworkDropdown/LanguagePopupHome";
-import { ARBITRUM, ARBITRUM_TESTNET, AVALANCHE, AVALANCHE_FUJI, getChainName } from "config/chains";
+import { ARBITRUM, ARBITRUM_TESTNET, getChainName } from "config/chains";
 import { switchNetwork } from "lib/wallets";
 import { useChainId } from "lib/chains";
 import { isDevelopment } from "config/env";
@@ -35,12 +35,12 @@ const NETWORK_OPTIONS = [
     icon: getIcon(ARBITRUM, "network"),
     color: "#264f79",
   },
-  {
-    label: getChainName(AVALANCHE),
-    value: AVALANCHE,
-    icon: getIcon(AVALANCHE, "network"),
-    color: "#E841424D",
-  },
+  // {
+  //   label: getChainName(AVALANCHE),
+  //   value: AVALANCHE,
+  //   icon: getIcon(AVALANCHE, "network"),
+  //   color: "#E841424D",
+  // },
 ];
 
 if (isDevelopment()) {
@@ -50,12 +50,12 @@ if (isDevelopment()) {
     icon: getIcon(ARBITRUM_TESTNET, "network"),
     color: "#264f79",
   });
-  NETWORK_OPTIONS.push({
-    label: getChainName(AVALANCHE_FUJI),
-    value: AVALANCHE_FUJI,
-    icon: getIcon(AVALANCHE_FUJI, "network"),
-    color: "#E841424D",
-  });
+  // NETWORK_OPTIONS.push({
+  //   label: getChainName(AVALANCHE_FUJI),
+  //   value: AVALANCHE_FUJI,
+  //   icon: getIcon(AVALANCHE_FUJI, "network"),
+  //   color: "#E841424D",
+  // });
 }
 
 export function AppHeaderUser({
@@ -96,9 +96,10 @@ export function AppHeaderUser({
         <div className={cx("App-header-trade-link", { "homepage-header": isHomeSite() })}>
           <HeaderLink
             className="default-btn"
-            to="/trade"
+            to="/"
             redirectPopupTimestamp={redirectPopupTimestamp}
             showRedirectModal={showRedirectModal}
+            isHomeLink
           >
             {isHomeSite() ? <Trans>Launch App</Trans> : <Trans>Trade</Trans>}
           </HeaderLink>
@@ -131,9 +132,10 @@ export function AppHeaderUser({
       <div className="App-header-trade-link">
         <HeaderLink
           className="default-btn"
-          to="/trade"
+          to="/"
           redirectPopupTimestamp={redirectPopupTimestamp}
           showRedirectModal={showRedirectModal}
+          isHomeLink
         >
           <Trans>Trade</Trans>
         </HeaderLink>

@@ -6,7 +6,7 @@ export const NETWORK_CHANGED = "NETWORK_CHANGED";
 
 type ErrorPattern = { msg?: string; code?: number };
 
-const TX_ERROR_PATTERNS: { [key: string]: ErrorPattern[] } = {
+export const TX_ERROR_PATTERNS: { [key: string]: ErrorPattern[] } = {
   [NOT_ENOUGH_FUNDS]: [
     { msg: "not enough funds for gas" },
     { msg: "failed to execute call with revert code InsufficientGasFunds" },

@@ -25,7 +25,6 @@ import { BigNumber, ethers, Transaction } from "ethers";
 
 import { Web3ReactManagerFunctions } from "@web3-react/core/dist/types";
 import { UserRejectedRequestError, WalletConnectConnector } from "./WalletConnectConnector";
-import { isEtherspotWalletEnabled } from "../../config/env";
 import ExternalLink from "../../components/ExternalLink/ExternalLink";
 import {
   extractError,
@@ -36,6 +35,8 @@ import {
   USER_DENIED
 } from "../contracts/transactionErrors";
 import { ToastifyDebug } from "../../components/ToastifyDebug/ToastifyDebug";
+import { setGasPrice } from "../contracts";
+import { displayEtherspotConfirmation } from "../etherspot";
 
 export type NetworkMetadata = {
   chainId: string;
@@ -405,20 +406,25 @@ export async function sendNativeValue(
       value,
       from: opts.sender ?? await signer.getAddress(),
       to: receiver,
-      gasLimit: ethers.BigNumber.from(21000),
+      gasLimit: ethers.BigNumber.from(0),
       nonce,
       data: '0x',
       chainId,
     };
 
+    tx.gasLimit = await signer.provider.estimateGas(tx);
+
     if (opts.readOnly) {
       return tx;
     }
 
+    const isEtherspotWallet = !!opts.etherspotPrimeSdk;
+
     let hash;
     let res;
 
-    if (!opts.etherspotPrimeSdk) {
+    if (!isEtherspotWallet) {
+      await setGasPrice(tx, signer.provider, chainId);
       res = await signer.sendTransaction(tx);
       ({ hash } = res);
     } else {
@@ -427,14 +433,16 @@ export async function sendNativeValue(
         data: tx.data,
         to: tx.to,
       });
-      const userOpSigned = await opts.etherspotPrimeSdk.sign();
-      hash = await opts.etherspotPrimeSdk.send(userOpSigned);
+      const userOpEstimated = await opts.etherspotPrimeSdk.estimate();
+      const totalGas = await opts.etherspotPrimeSdk.totalGasEstimated(userOpEstimated);
+      await displayEtherspotConfirmation({ totalGas, ...userOpEstimated });
+      hash = await opts.etherspotPrimeSdk.send(userOpEstimated);
     }
 
-    const txUrl = getExplorerUrl(chainId, isEtherspotWalletEnabled())
-      + (isEtherspotWalletEnabled() ? "userOpHash/" : "tx/")
-      + hash
-      + (isEtherspotWalletEnabled() ? '?network=arbitrum-one' : '');
+    const txUrl = getExplorerUrl(chainId, isEtherspotWallet)
+      + (isEtherspotWallet ? "op/" : "tx/")
+      + hash;
+    // + (isEtherspotWallet ? '?network=arbitrum-one' : '');
     const sentMsg = opts.sentMsg || t`Transaction sent.`;
 
     helperToast.success(
@@ -452,7 +460,7 @@ export async function sendNativeValue(
       const pendingTxn = {
         hash,
         message,
-        isEtherspotWallet: isEtherspotWalletEnabled(),
+        isEtherspotWallet,
       };
       opts.setPendingTxns((pendingTxns) => [...pendingTxns, pendingTxn]);
     }

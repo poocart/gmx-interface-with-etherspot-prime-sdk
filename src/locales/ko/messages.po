@@ -21,6 +21,10 @@ msgstr "2021년 9월 1일"
 msgid "06 Jan 2022"
 msgstr "2022년 1월 6일"
 
+#: src/components/AddressDropdown/AddressDropdown.tsx
+msgid "1-Click Trading"
+msgstr ""
+
 #: src/pages/Dashboard/DashboardV2.js
 msgid "24h Volume"
 msgstr "24시간 거래량"
@@ -74,6 +78,7 @@ msgid "<0>Total value of tokens in GLP pool ({chainName}).</0><1>Other websites 
 msgstr ""
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 #: src/lib/wallets/index.tsx
 msgid "<0>Your wallet is not connected to {0}.</0><1/><2>Switch to {1}</2>"
 msgstr ""
@@ -156,6 +161,10 @@ msgstr "주문의 실행이 보장되지 않으며 트리거 주문이 트리거
 msgid "Account"
 msgstr "계정"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Account Abstraction"
+msgstr ""
+
 #: src/pages/Actions/Actions.js
 msgid "Actions"
 msgstr "액션"
@@ -190,6 +199,7 @@ msgid "Additionally, trigger orders are market orders and are not guaranteed to 
 msgstr "추가로, 트리거 주문은 시장가 주문이며 트리거 가격으로 결제되지 않을 수도 있습니다."
 
 #: src/components/AddressDropdown/AddressDropdown.tsx
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Address copied to your clipboard"
 msgstr ""
 
@@ -208,6 +218,10 @@ msgstr "수령 후, esGMX 토큰은 7일 이내에 선택한 네트워크의 계
 #: src/components/ModalViews/RedirectModal.js
 msgid "Agree"
 msgstr "동의하기"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "All it takes is enabling 1-Click Trading, which allows you to effortlessly create your wallet and deposit tokens."
+msgstr ""
 
 #: src/App/App.js
 #: src/components/Exchange/ConfirmationBox.js
@@ -245,8 +259,8 @@ msgid "An aggregate of high-quality price feeds determine when liquidations occu
 msgstr "고품질의 여러 가격 피드를 통해 청산 발생 시기를 결정합니다. 이것은 일시적인 가격 변화로부터 포지션을 안전하게 유지합니다."
 
 #: src/pages/Ecosystem/Ecosystem.js
-msgid "Announcement"
-msgstr "공지"
+#~ msgid "Announcement"
+#~ msgstr "공지"
 
 #: src/components/Header/HomeHeaderLinks.tsx
 msgid "App"
@@ -355,12 +369,17 @@ msgstr "Avalanche APR:"
 #: src/components/Glp/GlpSwap.js
 #: src/components/Glp/GlpSwap.js
 #: src/components/Glp/GlpSwap.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Balance"
 msgstr "잔고"
 
 #: src/pages/BeginAccountTransfer/BeginAccountTransfer.js
 msgid "Begin Transfer"
 msgstr "전송시작"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Bid farewell to the need for multiple transaction signatures when opening or closing positions."
+msgstr ""
 
 #: src/components/Migration/Migration.js
 #: src/components/Migration/Migration.js
@@ -723,6 +742,7 @@ msgid "Community-led Telegram groups."
 msgstr "커뮤니티 주도 텔레그램 그룹"
 
 #: src/pages/CompleteAccountTransfer/CompleteAccountTransfer.js
+#: src/pages/CompleteAccountTransfer/CompleteAccountTransfer.js
 msgid "Complete Account Transfer"
 msgstr "계정 전송 완료"
 
@@ -780,6 +800,7 @@ msgstr "연동"
 #: src/components/Glp/GlpSwap.js
 #: src/components/Header/AppHeaderUser.tsx
 #: src/components/Migration/Migration.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/components/Referrals/AddAffiliateCode.js
 #: src/components/Referrals/JoinReferralCode.js
 #: src/pages/Stake/StakeV1.js
@@ -918,6 +939,7 @@ msgstr "현재 {0} 숏"
 #: src/pages/Ecosystem/Ecosystem.js
 #: src/pages/Ecosystem/Ecosystem.js
 #: src/pages/Ecosystem/Ecosystem.js
+#: src/pages/Ecosystem/Ecosystem.js
 msgid "DEX Aggregator"
 msgstr "DEX 어그리게이터"
 
@@ -950,6 +972,10 @@ msgstr "12월"
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "Decentralized Finance Dashboard"
 msgstr "탈중앙화 금융 대시보드"
+
+#: src/pages/Ecosystem/Ecosystem.js
+msgid "Decentralized Money Market"
+msgstr ""
 
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "Decentralized Options Protocol"
@@ -996,6 +1022,8 @@ msgstr "{tokenSymbol} {longOrShortText} 감소, -{0} USD."
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
@@ -1008,6 +1036,7 @@ msgid "Deposit Fee"
 msgstr ""
 
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Deposit amount is insufficient to bring leverage below the max allowed leverage of 100x"
 msgstr ""
 
@@ -1034,6 +1063,10 @@ msgstr "예치 제출 완료!"
 #: src/components/Exchange/PositionEditor.js
 msgid "Deposit submitted."
 msgstr "예치 제출 완료."
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Deposit your tokens into a self-custodial AA wallet, where you retain full control."
+msgstr ""
 
 #: src/components/Exchange/TradeHistory.js
 msgid "Deposit {0} USD into {1} {longOrShortText}"
@@ -1063,6 +1096,10 @@ msgstr "차이"
 #: src/App/App.js
 msgid "Disable order validations"
 msgstr "주문 밸리데이션 무효화"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Disable ⚡️ 1-Click Trading"
+msgstr ""
 
 #: src/components/AddressDropdown/AddressDropdown.tsx
 msgid "Disconnect"
@@ -1174,6 +1211,11 @@ msgstr "인출 유효화 실패"
 msgid "Enable withdraw sent."
 msgstr "인출 유효화 제출 완료"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Enable ⚡️ 1-Click Trading"
+msgstr ""
+
 #: src/components/Exchange/PositionEditor.js
 msgid "Enabling Leverage"
 msgstr "레버리지 유효화"
@@ -1237,6 +1279,7 @@ msgstr "가격 입력"
 #: src/components/Glp/GlpSwap.js
 #: src/components/Glp/GlpSwap.js
 #: src/components/Migration/Migration.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/ClaimEsGmx/ClaimEsGmx.js
 #: src/pages/Stake/StakeV1.js
 #: src/pages/Stake/StakeV1.js
@@ -1298,6 +1341,15 @@ msgstr "매도 가격"
 #: src/components/Glp/GlpSwap.js
 msgid "FEES"
 msgstr "수수료"
+
+#: src/components/Exchange/SwapBox.js
+msgid "Failed to add Etherspot Prime transaction!"
+msgstr ""
+
+#: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Failed to reset Etherspot Prime transactions!"
+msgstr ""
 
 #: src/components/Exchange/ConfirmationBox.js
 #: src/components/Exchange/ConfirmationBox.js
@@ -1493,6 +1545,10 @@ msgid "GMX staking calculator"
 msgstr "GMX 스테이킹 계산기"
 
 #: src/pages/Ecosystem/Ecosystem.js
+msgid "GMX staking calculator and guide"
+msgstr ""
+
+#: src/pages/Ecosystem/Ecosystem.js
 msgid "GMX staking rewards updates and insights"
 msgstr "GMX 스테이킹 보상 업데이트 및 인사이트"
 
@@ -1519,6 +1575,10 @@ msgstr ""
 
 #: src/components/Header/HomeHeaderLinks.tsx
 msgid "Governance"
+msgstr ""
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Here's how it works:"
 msgstr ""
 
 #: src/components/Exchange/SwapBox.js
@@ -1554,11 +1614,13 @@ msgid "Incorrect Account"
 msgstr "잘못된 계정입니다"
 
 #: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/Stake/StakeV1.js
 msgid "Incorrect Network"
 msgstr "잘못된 네트워크입니다"
 
 #: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Incorrect network"
 msgstr "잘못된 네트워크입니다"
 
@@ -1636,6 +1698,7 @@ msgstr "스테이킹된 토큰 부족"
 #: src/components/Exchange/SwapBox.js
 #: src/components/Exchange/SwapBox.js
 #: src/components/Glp/GlpSwap.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Insufficient {0} balance"
 msgstr "{0} 잔고 부족"
 
@@ -1656,6 +1719,10 @@ msgstr "유효하지 않은 수령인"
 #: src/pages/NftWallet/NftWallet.js
 msgid "Invalid Receiver Address"
 msgstr "유효하지 않은 수령 주소"
+
+#: src/pages/CompleteAccountTransfer/CompleteAccountTransfer.js
+msgid "Invalid Transfer Addresses: Please check the url."
+msgstr ""
 
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
@@ -1727,6 +1794,10 @@ msgstr "가스를 위해 최소 {0} ETH를 남겨주세요"
 #: src/components/Exchange/SwapBox.js
 msgid "Leave at least {0} {1} for gas"
 msgstr "가스를 위해 최소 {0} {1}을(를) 남겨주세요"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Leave behind the requirement for gas tokens; now you can conveniently pay for gas using your tokens."
+msgstr ""
 
 #: src/components/Exchange/PositionEditor.js
 msgid "Leftover Collateral not enough to cover fees"
@@ -1816,6 +1887,7 @@ msgid "Liquidation Fee"
 msgstr ""
 
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Liquidation price would cross mark price."
 msgstr ""
 
@@ -1897,6 +1969,10 @@ msgstr "최대"
 msgid "MEV Optimizer"
 msgstr "MEV 옵티마이저"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Manage your Account Abstraction Wallet"
+msgstr ""
+
 #: src/components/Exchange/SwapBox.js
 msgid "Mark"
 msgstr ""
@@ -1936,6 +2012,7 @@ msgstr "마켓"
 msgid "Market Cap"
 msgstr "시가총액"
 
+#: src/components/Exchange/SwapBox.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
@@ -2160,6 +2237,13 @@ msgstr "네트워크 및 설정"
 #: src/components/Exchange/TradeHistory.js
 msgid "Next"
 msgstr "다음"
+
+#: src/components/Exchange/PositionSeller.js
+#: src/components/Exchange/SwapBox.js
+#: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "No Etherspot Prime SDK found for chainId 42161"
+msgstr ""
 
 #: src/pages/Actions/Actions.js
 msgid "No PnLs found"
@@ -2472,6 +2556,7 @@ msgstr "가격"
 
 #: src/components/Exchange/OrderEditor.js
 #: src/components/Exchange/PositionSeller.js
+#: src/components/Exchange/SwapBox.js
 msgid "Price above Liq. Price"
 msgstr "청산가 초과 가격"
 
@@ -2483,6 +2568,7 @@ msgstr "시장 평균가 초과 가격"
 
 #: src/components/Exchange/OrderEditor.js
 #: src/components/Exchange/PositionSeller.js
+#: src/components/Exchange/SwapBox.js
 msgid "Price below Liq. Price"
 msgstr "청산가 미만 가격"
 
@@ -2542,6 +2628,10 @@ msgstr ""
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "Protocol analytics"
 msgstr "프로토콜 분석"
+
+#: src/pages/Ecosystem/Ecosystem.js
+msgid "Protocol risk explorer and stats"
+msgstr ""
 
 #: src/pages/BuyGlp/BuyGlp.js
 msgid "Purchase <0>GLP tokens</0> to earn {nativeTokenSymbol} fees from swaps and leverages trading."
@@ -3113,6 +3203,7 @@ msgid "Swapping..."
 msgstr "스왑중..."
 
 #: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Swaps disabled, pending {0} upgrade"
 msgstr "{0} 업그레이드를 위해 스왑이 비활성화되었습니다"
 
@@ -3196,6 +3287,7 @@ msgid "The esGMX tokens can be staked or vested at any time."
 msgstr "esGMX는 언제든지 스테이킹하거나 베스팅 할 수 있습니다."
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "The mark price has changed, consider increasing your Allowed Slippage by clicking on the \"...\" icon next to your address."
 msgstr "시장 평균가가 변화되었습니다. 귀하의 주소 옆에 \"...\" 아이콘을 클릭해서 허용 가능한 슬리피지 증가를 고려해보세요."
 
@@ -3237,6 +3329,7 @@ msgstr "롱 포지션보다 숏 포지션이 더 많이 열려있기 때문에, 
 
 #: src/domain/tokens/approveTokens.tsx
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "There is not enough ETH in your account on Arbitrum to send this transaction.<0/><1/><2>Bridge ETH to Arbitrum</2>"
 msgstr "해당 트랜잭션을 처리하기위한 충분한 ETH가 귀하의 Abritrum 계정에 존재하지 않습니다.<0/><1/><2>Abritrum으로 ETH를 브릿징하세요</2>"
 
@@ -3460,22 +3553,27 @@ msgid "Transaction"
 msgstr "거래"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction completed!"
 msgstr "트랜잭션 완료!"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction failed"
 msgstr "트랜잭션 실패"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction failed due to RPC error.<0/><1/>Please try changing the RPC url in your wallet settings. <2>More info</2>"
 msgstr "RPC 에러로 인해 트랜잭션이 실패했스빈아.<0/><1/>지갑 설정에서 RPC url을 변경하여 시도해주세요. <2>더 자세한 정보</2>"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction sent."
 msgstr "트랜잭션 전송됨."
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction was cancelled."
 msgstr "트랜잭션 실패됨."
 
@@ -3526,8 +3624,16 @@ msgstr "트리거"
 msgid "Trigger Price"
 msgstr ""
 
+#: src/components/Exchange/SwapBox.js
+msgid "Trigger amount"
+msgstr ""
+
 #: src/components/Exchange/PositionSeller.js
 msgid "Trigger order disabled, pending {0} upgrade"
+msgstr ""
+
+#: src/components/Exchange/SwapBox.js
+msgid "Trigger price"
 msgstr ""
 
 #: src/components/Exchange/TradeHistory.js
@@ -3562,6 +3668,10 @@ msgstr "USDG 부채"
 #: src/pages/Dashboard/DashboardV2.js
 msgid "UTILIZATION"
 msgstr "이용률"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Unlock a seamless and hassle-free trading experience with the power of Account Abstraction."
+msgstr ""
 
 #: src/pages/Stake/StakeV1.js
 #: src/pages/Stake/StakeV1.js
@@ -3711,6 +3821,7 @@ msgid "View in Explorer"
 msgstr "Explorer에서 보기"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "View status."
 msgstr "상태 보기."
 
@@ -3795,10 +3906,16 @@ msgstr "가중치"
 msgid "When closing the position, you can select which token you would like to receive the profits in."
 msgstr "포지션을 닫을 때, 어떤 토큰으로 이익을 수취할 지 선택할 수 있습니다."
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "With <0>Account Abstraction</0>, trading becomes smoother than ever before, ensuring a streamlined process for traders."
+msgstr ""
+
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
 msgid "Withdraw"
@@ -3848,9 +3965,17 @@ msgstr "인출 완료!"
 msgid "Withdrew {0} USD from {tokenSymbol} {longOrShortText}."
 msgstr "{tokenSymbol} {longOrShortText} {0} USD 인출됨."
 
+#: src/components/Exchange/SwapBox.js
+msgid "Wrong trigger amount"
+msgstr ""
+
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "Yield Optimizer on Avalanche"
 msgstr "Avalanche 일드 옵티마이저"
+
+#: src/pages/Ecosystem/Ecosystem.js
+msgid "Yield Trading"
+msgstr ""
 
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "Yield Vaults"
@@ -3961,6 +4086,10 @@ msgstr "해당 주문이 실행되게 되면 최소 {0} {1}을 받을 수 있습
 msgid "You will receive at least {0} {1} if this order is executed. The execution price may vary depending on swap fees at the time the order is executed."
 msgstr "해당 주문이 실행되게 되면 최소 {0} {1}을 받을 수 있습니다. 정확한 실행가격은 주문이 실행된 스왑 수수료에 의해 상이합니다."
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Your Account Abstraction wallet address"
+msgstr ""
+
 #: src/pages/ClaimEsGmx/ClaimEsGmx.js
 msgid "Your esGMX (IOU) balance will decrease by your claim amount after claiming, this is expected behaviour."
 msgstr "귀하의 esGMX(IOU) 잔액은 수령 후 수령액만큼 감소하는데 이는 상정된 행동입니다."
@@ -3977,6 +4106,10 @@ msgstr "이전이 완료되었습니다."
 msgid "Your transfer has been initiated."
 msgstr "이전이 시작되었습니다."
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Your wallet address"
+msgstr ""
+
 #: src/components/Migration/Migration.js
 msgid "Your wallet: {0}"
 msgstr "귀하의 지갑: {0}"
@@ -3988,6 +4121,15 @@ msgstr "게정"
 #: src/pages/PositionsOverview/PositionsOverview.js
 msgid "collateral"
 msgstr "담보"
+
+#: src/pages/Ecosystem/Ecosystem.js
+msgid "esGMX OTC Market"
+msgstr ""
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "failed."
+msgstr ""
 
 #: src/pages/PositionsOverview/PositionsOverview.js
 msgid "fee"
@@ -4016,6 +4158,11 @@ msgstr "스테이킹됨"
 #: src/pages/PositionsOverview/PositionsOverview.js
 msgid "time to liq"
 msgstr "청산까지의 시간"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "transaction submitted!"
+msgstr ""
 
 #: src/components/Exchange/ConfirmationBox.js
 msgid "view"
@@ -4173,6 +4320,11 @@ msgstr ""
 
 #: src/components/Exchange/PositionSeller.js
 msgid "{nativeTokenSymbol} can not be sent to smart contract addresses. Select another token."
+msgstr ""
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "{successAction} {0} {1}!"
 msgstr ""
 
 #: src/components/StatsTooltip/StatsTooltip.tsx

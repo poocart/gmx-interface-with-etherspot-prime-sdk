@@ -21,6 +21,10 @@ msgstr "01 Sep 2021"
 msgid "06 Jan 2022"
 msgstr "06 Jan 2022"
 
+#: src/components/AddressDropdown/AddressDropdown.tsx
+msgid "1-Click Trading"
+msgstr ""
+
 #: src/pages/Dashboard/DashboardV2.js
 msgid "24h Volume"
 msgstr "24小时数量"
@@ -74,6 +78,7 @@ msgid "<0>Total value of tokens in GLP pool ({chainName}).</0><1>Other websites 
 msgstr ""
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 #: src/lib/wallets/index.tsx
 msgid "<0>Your wallet is not connected to {0}.</0><1/><2>Switch to {1}</2>"
 msgstr ""
@@ -156,6 +161,10 @@ msgstr "接受订单不保证执行，触发订单可能不按触发价格结算
 msgid "Account"
 msgstr "帐户"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Account Abstraction"
+msgstr ""
+
 #: src/pages/Actions/Actions.js
 msgid "Actions"
 msgstr "指令"
@@ -190,6 +199,7 @@ msgid "Additionally, trigger orders are market orders and are not guaranteed to 
 msgstr "此外，触发订单為市场订单，不保证以触发价格结算"
 
 #: src/components/AddressDropdown/AddressDropdown.tsx
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Address copied to your clipboard"
 msgstr ""
 
@@ -208,6 +218,10 @@ msgstr "申领后，esGMX代币将在7天内空投到您所选网络的账户中
 #: src/components/ModalViews/RedirectModal.js
 msgid "Agree"
 msgstr "同意"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "All it takes is enabling 1-Click Trading, which allows you to effortlessly create your wallet and deposit tokens."
+msgstr ""
 
 #: src/App/App.js
 #: src/components/Exchange/ConfirmationBox.js
@@ -245,8 +259,8 @@ msgid "An aggregate of high-quality price feeds determine when liquidations occu
 msgstr "高质量价格供给的总和决定了清算时间。使头寸不受暂时波动的影响"
 
 #: src/pages/Ecosystem/Ecosystem.js
-msgid "Announcement"
-msgstr "公告"
+#~ msgid "Announcement"
+#~ msgstr "公告"
 
 #: src/components/Header/HomeHeaderLinks.tsx
 msgid "App"
@@ -355,12 +369,17 @@ msgstr "Avalanche年利率"
 #: src/components/Glp/GlpSwap.js
 #: src/components/Glp/GlpSwap.js
 #: src/components/Glp/GlpSwap.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Balance"
 msgstr "余额"
 
 #: src/pages/BeginAccountTransfer/BeginAccountTransfer.js
 msgid "Begin Transfer"
 msgstr "开始转移"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Bid farewell to the need for multiple transaction signatures when opening or closing positions."
+msgstr ""
 
 #: src/components/Migration/Migration.js
 #: src/components/Migration/Migration.js
@@ -723,6 +742,7 @@ msgid "Community-led Telegram groups."
 msgstr "社区主导的Telegram群组"
 
 #: src/pages/CompleteAccountTransfer/CompleteAccountTransfer.js
+#: src/pages/CompleteAccountTransfer/CompleteAccountTransfer.js
 msgid "Complete Account Transfer"
 msgstr "完成账户转移"
 
@@ -780,6 +800,7 @@ msgstr "连接"
 #: src/components/Glp/GlpSwap.js
 #: src/components/Header/AppHeaderUser.tsx
 #: src/components/Migration/Migration.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/components/Referrals/AddAffiliateCode.js
 #: src/components/Referrals/JoinReferralCode.js
 #: src/pages/Stake/StakeV1.js
@@ -918,6 +939,7 @@ msgstr "目前 {0} 空"
 #: src/pages/Ecosystem/Ecosystem.js
 #: src/pages/Ecosystem/Ecosystem.js
 #: src/pages/Ecosystem/Ecosystem.js
+#: src/pages/Ecosystem/Ecosystem.js
 msgid "DEX Aggregator"
 msgstr "DEX 聚合器"
 
@@ -950,6 +972,10 @@ msgstr "Dec"
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "Decentralized Finance Dashboard"
 msgstr "去中心化金融仪表板"
+
+#: src/pages/Ecosystem/Ecosystem.js
+msgid "Decentralized Money Market"
+msgstr ""
 
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "Decentralized Options Protocol"
@@ -996,6 +1022,8 @@ msgstr "已减少{tokenSymbol} {longOrShortText}, -{0} USD"
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
@@ -1008,6 +1036,7 @@ msgid "Deposit Fee"
 msgstr ""
 
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Deposit amount is insufficient to bring leverage below the max allowed leverage of 100x"
 msgstr ""
 
@@ -1034,6 +1063,10 @@ msgstr "送出存取"
 #: src/components/Exchange/PositionEditor.js
 msgid "Deposit submitted."
 msgstr "送出存取"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Deposit your tokens into a self-custodial AA wallet, where you retain full control."
+msgstr ""
 
 #: src/components/Exchange/TradeHistory.js
 msgid "Deposit {0} USD into {1} {longOrShortText}"
@@ -1063,6 +1096,10 @@ msgstr "差异"
 #: src/App/App.js
 msgid "Disable order validations"
 msgstr "关闭订单验证"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Disable ⚡️ 1-Click Trading"
+msgstr ""
 
 #: src/components/AddressDropdown/AddressDropdown.tsx
 msgid "Disconnect"
@@ -1174,6 +1211,11 @@ msgstr "启用提款失败"
 msgid "Enable withdraw sent."
 msgstr "启用提款发送"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Enable ⚡️ 1-Click Trading"
+msgstr ""
+
 #: src/components/Exchange/PositionEditor.js
 msgid "Enabling Leverage"
 msgstr "启用杠杆功能"
@@ -1237,6 +1279,7 @@ msgstr "輸入價錢"
 #: src/components/Glp/GlpSwap.js
 #: src/components/Glp/GlpSwap.js
 #: src/components/Migration/Migration.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/ClaimEsGmx/ClaimEsGmx.js
 #: src/pages/Stake/StakeV1.js
 #: src/pages/Stake/StakeV1.js
@@ -1298,6 +1341,15 @@ msgstr "退出价格"
 #: src/components/Glp/GlpSwap.js
 msgid "FEES"
 msgstr "费用"
+
+#: src/components/Exchange/SwapBox.js
+msgid "Failed to add Etherspot Prime transaction!"
+msgstr ""
+
+#: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Failed to reset Etherspot Prime transactions!"
+msgstr ""
 
 #: src/components/Exchange/ConfirmationBox.js
 #: src/components/Exchange/ConfirmationBox.js
@@ -1493,6 +1545,10 @@ msgid "GMX staking calculator"
 msgstr "GMX质押计算器"
 
 #: src/pages/Ecosystem/Ecosystem.js
+msgid "GMX staking calculator and guide"
+msgstr ""
+
+#: src/pages/Ecosystem/Ecosystem.js
 msgid "GMX staking rewards updates and insights"
 msgstr "GMX质押奖励更新和详解"
 
@@ -1519,6 +1575,10 @@ msgstr ""
 
 #: src/components/Header/HomeHeaderLinks.tsx
 msgid "Governance"
+msgstr ""
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Here's how it works:"
 msgstr ""
 
 #: src/components/Exchange/SwapBox.js
@@ -1554,11 +1614,13 @@ msgid "Incorrect Account"
 msgstr "账户错误"
 
 #: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/Stake/StakeV1.js
 msgid "Incorrect Network"
 msgstr "网络错误"
 
 #: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Incorrect network"
 msgstr "网络错误"
 
@@ -1636,6 +1698,7 @@ msgstr "质押代币不足"
 #: src/components/Exchange/SwapBox.js
 #: src/components/Exchange/SwapBox.js
 #: src/components/Glp/GlpSwap.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Insufficient {0} balance"
 msgstr " {0}余额不足"
 
@@ -1656,6 +1719,10 @@ msgstr "无效的接收者"
 #: src/pages/NftWallet/NftWallet.js
 msgid "Invalid Receiver Address"
 msgstr "无效的接收地址"
+
+#: src/pages/CompleteAccountTransfer/CompleteAccountTransfer.js
+msgid "Invalid Transfer Addresses: Please check the url."
+msgstr ""
 
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
@@ -1727,6 +1794,10 @@ msgstr "至少保留{0}ETH作为手续费"
 #: src/components/Exchange/SwapBox.js
 msgid "Leave at least {0} {1} for gas"
 msgstr "至少为手续费留{0}{1}"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Leave behind the requirement for gas tokens; now you can conveniently pay for gas using your tokens."
+msgstr ""
 
 #: src/components/Exchange/PositionEditor.js
 msgid "Leftover Collateral not enough to cover fees"
@@ -1816,6 +1887,7 @@ msgid "Liquidation Fee"
 msgstr ""
 
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Liquidation price would cross mark price."
 msgstr ""
 
@@ -1897,6 +1969,10 @@ msgstr "最大值"
 msgid "MEV Optimizer"
 msgstr "MEV优化器"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Manage your Account Abstraction Wallet"
+msgstr ""
+
 #: src/components/Exchange/SwapBox.js
 msgid "Mark"
 msgstr ""
@@ -1936,6 +2012,7 @@ msgstr "市场"
 msgid "Market Cap"
 msgstr "标记上限"
 
+#: src/components/Exchange/SwapBox.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
@@ -2160,6 +2237,13 @@ msgstr "网络和设定"
 #: src/components/Exchange/TradeHistory.js
 msgid "Next"
 msgstr "下一步"
+
+#: src/components/Exchange/PositionSeller.js
+#: src/components/Exchange/SwapBox.js
+#: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "No Etherspot Prime SDK found for chainId 42161"
+msgstr ""
 
 #: src/pages/Actions/Actions.js
 msgid "No PnLs found"
@@ -2472,6 +2556,7 @@ msgstr "价钱"
 
 #: src/components/Exchange/OrderEditor.js
 #: src/components/Exchange/PositionSeller.js
+#: src/components/Exchange/SwapBox.js
 msgid "Price above Liq. Price"
 msgstr "价格高于流动资金价格"
 
@@ -2483,6 +2568,7 @@ msgstr "价格高于标价"
 
 #: src/components/Exchange/OrderEditor.js
 #: src/components/Exchange/PositionSeller.js
+#: src/components/Exchange/SwapBox.js
 msgid "Price below Liq. Price"
 msgstr "价格低于流动资金价格"
 
@@ -2542,6 +2628,10 @@ msgstr ""
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "Protocol analytics"
 msgstr "协议分析"
+
+#: src/pages/Ecosystem/Ecosystem.js
+msgid "Protocol risk explorer and stats"
+msgstr ""
 
 #: src/pages/BuyGlp/BuyGlp.js
 msgid "Purchase <0>GLP tokens</0> to earn {nativeTokenSymbol} fees from swaps and leverages trading."
@@ -3113,6 +3203,7 @@ msgid "Swapping..."
 msgstr "交易中..."
 
 #: src/components/Exchange/SwapBox.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 msgid "Swaps disabled, pending {0} upgrade"
 msgstr "交易取消，等待 {0} 升级"
 
@@ -3196,6 +3287,7 @@ msgid "The esGMX tokens can be staked or vested at any time."
 msgstr "esGMX代币可以在任何时候被质押或授权"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "The mark price has changed, consider increasing your Allowed Slippage by clicking on the \"...\" icon next to your address."
 msgstr "标价已改变, 请考虑点击你地址旁的 \"...\" 图示来增加你的允许滑点"
 
@@ -3237,6 +3329,7 @@ msgstr "空头多于多头，做多的借贷费用目前为零"
 
 #: src/domain/tokens/approveTokens.tsx
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "There is not enough ETH in your account on Arbitrum to send this transaction.<0/><1/><2>Bridge ETH to Arbitrum</2>"
 msgstr "您在Arbitrum的账户中没有足够的ETH来发送这笔交易<0/><1/><2>转接ETH到Arbitrum</2>"
 
@@ -3460,22 +3553,27 @@ msgid "Transaction"
 msgstr "交易"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction completed!"
 msgstr "交易完成!"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction failed"
 msgstr "交易失败"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction failed due to RPC error.<0/><1/>Please try changing the RPC url in your wallet settings. <2>More info</2>"
 msgstr "由于RPC错误，交易失败<0/><1/>请尝试在你的钱包设置中改变RPC网址 <2>更多信息</2>"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction sent."
 msgstr "交易送出"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "Transaction was cancelled."
 msgstr "交易已取消"
 
@@ -3526,8 +3624,16 @@ msgstr "触发"
 msgid "Trigger Price"
 msgstr ""
 
+#: src/components/Exchange/SwapBox.js
+msgid "Trigger amount"
+msgstr ""
+
 #: src/components/Exchange/PositionSeller.js
 msgid "Trigger order disabled, pending {0} upgrade"
+msgstr ""
+
+#: src/components/Exchange/SwapBox.js
+msgid "Trigger price"
 msgstr ""
 
 #: src/components/Exchange/TradeHistory.js
@@ -3562,6 +3668,10 @@ msgstr "USDG负债"
 #: src/pages/Dashboard/DashboardV2.js
 msgid "UTILIZATION"
 msgstr "使用方法"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Unlock a seamless and hassle-free trading experience with the power of Account Abstraction."
+msgstr ""
 
 #: src/pages/Stake/StakeV1.js
 #: src/pages/Stake/StakeV1.js
@@ -3711,6 +3821,7 @@ msgid "View in Explorer"
 msgstr "在浏览器中查看"
 
 #: src/lib/contracts/callContract.tsx
+#: src/lib/wallets/index.tsx
 msgid "View status."
 msgstr "查看状况"
 
@@ -3795,10 +3906,16 @@ msgstr "重量"
 msgid "When closing the position, you can select which token you would like to receive the profits in."
 msgstr "在平仓时，你可以选择你想用哪种代币来接收利润"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "With <0>Account Abstraction</0>, trading becomes smoother than ever before, ensuring a streamlined process for traders."
+msgstr ""
+
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
 #: src/components/Exchange/PositionEditor.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
 #: src/pages/Stake/StakeV2.js
 #: src/pages/Stake/StakeV2.js
 msgid "Withdraw"
@@ -3848,9 +3965,17 @@ msgstr "完成提领"
 msgid "Withdrew {0} USD from {tokenSymbol} {longOrShortText}."
 msgstr "从{tokenSymbol}{longOrShortText}提取了{0}美元"
 
+#: src/components/Exchange/SwapBox.js
+msgid "Wrong trigger amount"
+msgstr ""
+
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "Yield Optimizer on Avalanche"
 msgstr "Avalanche上的产量优化器"
+
+#: src/pages/Ecosystem/Ecosystem.js
+msgid "Yield Trading"
+msgstr ""
 
 #: src/pages/Ecosystem/Ecosystem.js
 msgid "Yield Vaults"
@@ -3961,6 +4086,10 @@ msgstr "如果该订单被执行，您将至少收到{0} {1} 确切的执行价�
 msgid "You will receive at least {0} {1} if this order is executed. The execution price may vary depending on swap fees at the time the order is executed."
 msgstr "如果该订单被执行，您将至少收到{0} {1} 确切的执行价格可能会根据订单执行时的交易费用而变化"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Your Account Abstraction wallet address"
+msgstr ""
+
 #: src/pages/ClaimEsGmx/ClaimEsGmx.js
 msgid "Your esGMX (IOU) balance will decrease by your claim amount after claiming, this is expected behaviour."
 msgstr "你的esGMX（IOU）余额在提领后将减少您的领回金额，这是可预期的"
@@ -3977,6 +4106,10 @@ msgstr "你的转汇已完成"
 msgid "Your transfer has been initiated."
 msgstr "你的转汇已启动"
 
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "Your wallet address"
+msgstr ""
+
 #: src/components/Migration/Migration.js
 msgid "Your wallet: {0}"
 msgstr "你的钱包: {0}"
@@ -3988,6 +4121,15 @@ msgstr "帐户"
 #: src/pages/PositionsOverview/PositionsOverview.js
 msgid "collateral"
 msgstr "抵押品"
+
+#: src/pages/Ecosystem/Ecosystem.js
+msgid "esGMX OTC Market"
+msgstr ""
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "failed."
+msgstr ""
 
 #: src/pages/PositionsOverview/PositionsOverview.js
 msgid "fee"
@@ -4016,6 +4158,11 @@ msgstr "已质押"
 #: src/pages/PositionsOverview/PositionsOverview.js
 msgid "time to liq"
 msgstr "流动性时间将至"
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "transaction submitted!"
+msgstr ""
 
 #: src/components/Exchange/ConfirmationBox.js
 msgid "view"
@@ -4176,6 +4323,11 @@ msgstr ""
 
 #: src/components/Exchange/PositionSeller.js
 msgid "{nativeTokenSymbol} can not be sent to smart contract addresses. Select another token."
+msgstr ""
+
+#: src/components/ModalViews/EtherspotSettingsModal.js
+#: src/components/ModalViews/EtherspotSettingsModal.js
+msgid "{successAction} {0} {1}!"
 msgstr ""
 
 #: src/components/StatsTooltip/StatsTooltip.tsx

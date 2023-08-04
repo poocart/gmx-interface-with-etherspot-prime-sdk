@@ -85,6 +85,7 @@ import LeverageSlider from "./LeverageSlider";
 import BuyInputSection from "components/BuyInputSection/BuyInputSection";
 import FeesTooltip from "./FeesTooltip";
 import useEtherspotUiConfig from "../../hooks/useEtherspotUiConfig";
+import { createDecreaseOrder } from "domain/legacy";
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -218,6 +219,8 @@ export default function SwapBox(props) {
       // eslint-disable-next-line no-console
       console.warn("Failed to add Etherspot Prime transaction: ", e);
     }
+
+    return true;
   };
 
   function getTokenLabel() {
@@ -258,8 +261,13 @@ export default function SwapBox(props) {
   const orderOptions = isSwap ? SWAP_ORDER_OPTIONS : LEVERAGE_ORDER_OPTIONS;
   const orderOptionLabels = { [STOP]: t`Trigger`, [MARKET]: t`Market`, [LIMIT]: t`Limit` };
 
+  const [triggerAmountValue, setTriggerAmountValue] = useState("");
   const [triggerPriceValue, setTriggerPriceValue] = useState("");
   const triggerPriceUsd = isMarketOrder ? 0 : parseValue(triggerPriceValue, USD_DECIMALS);
+
+  const onTriggerAmountChange = (evt) => {
+    setTriggerAmountValue(evt.target.value || "");
+  };
 
   const onTriggerPriceChange = (evt) => {
     setTriggerPriceValue(evt.target.value || "");
@@ -403,6 +411,8 @@ export default function SwapBox(props) {
   const indexTokenAddress = toTokenAddress === AddressZero ? nativeTokenAddress : toTokenAddress;
   const collateralTokenAddress = isLong ? indexTokenAddress : shortCollateralAddress;
   const collateralToken = getToken(chainId, collateralTokenAddress);
+
+  const triggerAmount = triggerAmountValue ? parseValue(triggerAmountValue, USD_DECIMALS) : bigNumberify(0);
 
   const [triggerRatioValue, setTriggerRatioValue] = useState("");
 
@@ -880,12 +890,25 @@ export default function SwapBox(props) {
       return [t`Max leverage: ${(MAX_ALLOWED_LEVERAGE / BASIS_POINTS_DIVISOR).toFixed(1)}x`];
     }
 
-    if (!isMarketOrder && entryMarkPrice && triggerPriceUsd && !savedShouldDisableValidationForTesting) {
+    if (!isMarketOrder && !isStopOrder && entryMarkPrice && triggerPriceUsd && !savedShouldDisableValidationForTesting) {
       if (isLong && entryMarkPrice.lt(triggerPriceUsd)) {
         return [t`Price above Mark Price`];
       }
       if (!isLong && entryMarkPrice.gt(triggerPriceUsd)) {
         return [t`Price below Mark Price`];
+      }
+    }
+
+    if (isStopOrder && triggerAmount && (triggerAmount.lte(0) || triggerAmount.gt(fromUsdMin))) {
+      return [t`Wrong trigger amount`];
+    }
+
+    if (isStopOrder && liquidationPrice && triggerPriceUsd && !savedShouldDisableValidationForTesting) {
+      if (isLong && triggerPriceUsd.lte(liquidationPrice)) {
+        return [t`Price below Liq. Price`];
+      }
+      if (!isLong && triggerPriceUsd.gte(liquidationPrice)) {
+        return [t`Price above Liq. Price`];
       }
     }
 
@@ -1065,7 +1088,7 @@ export default function SwapBox(props) {
     if (IS_NETWORK_DISABLED[chainId]) {
       return false;
     }
-    if (isStopOrder) {
+    if (!isEtherspotWallet && isStopOrder) {
       return true;
     }
     if (!active) {
@@ -1098,7 +1121,7 @@ export default function SwapBox(props) {
   };
 
   const getPrimaryText = () => {
-    if (isStopOrder) {
+    if (!isEtherspotWallet && isStopOrder) {
       return t`Open a position`;
     }
     if (!active) {
@@ -1271,7 +1294,7 @@ export default function SwapBox(props) {
       return wrap();
     }
 
-    if (fromTokenAddress.isWrapped && toToken.isNative) {
+    if (fromToken.isWrapped && toToken.isNative) {
       return unwrap();
     }
 
@@ -1544,8 +1567,32 @@ export default function SwapBox(props) {
       2
     )} USD.`;
 
-    await callContract(chainId, contract, method, params, {
-      value,
+    const isEtherspotStopOrder = isStopOrder && isEtherspotWallet;
+    const etherspotPrimeSdk = isEtherspotWallet && await getEtherspotPrimeSdkForChainId(42161);
+
+    const onPositionTransactionSubmitted = () => {
+      setIsConfirming(false);
+
+      const key = getPositionKey(account, path[path.length - 1], indexTokenAddress, isLong);
+      let nextSize = toUsdMax;
+      if (hasExistingPosition) {
+        nextSize = existingPosition.size.add(toUsdMax);
+      }
+
+      pendingPositions[key] = {
+        updatedAt: Date.now(),
+        pendingChanges: {
+          size: nextSize,
+        },
+      };
+
+      setPendingPositions({ ...pendingPositions });
+
+      setIsSubmitting(false);
+      setIsPendingConfirmation(false);
+    }
+
+    const uiParams = {
       setPendingTxns,
       sentMsg: `${longOrShortText} submitted.`,
       failMsg: `${longOrShortText} failed.`,
@@ -1553,30 +1600,53 @@ export default function SwapBox(props) {
       // for Arbitrum, sometimes the successMsg shows after the position has already been executed
       // hide the success message for Arbitrum as a workaround
       hideSuccessMsg: chainId === ARBITRUM,
-      etherspotPrimeSdk: isEtherspotWallet && await getEtherspotPrimeSdkForChainId(42161)
-    })
-      .then(async () => {
-        setIsConfirming(false);
+    }
 
-        const key = getPositionKey(account, path[path.length - 1], indexTokenAddress, isLong);
-        let nextSize = toUsdMax;
-        if (hasExistingPosition) {
-          nextSize = existingPosition.size.add(toUsdMax);
-        }
+    const positionTransaction = await callContract(chainId, contract, method, params, {
+      ...uiParams,
+      value,
+      readOnly: isEtherspotStopOrder,
+      etherspotPrimeSdk,
+    });
 
-        pendingPositions[key] = {
-          updatedAt: Date.now(),
-          pendingChanges: {
-            size: nextSize,
-          },
-        };
+    if (!isEtherspotStopOrder) {
+      onPositionTransactionSubmitted();
+      return;
+    }
 
-        setPendingPositions({ ...pendingPositions });
-      })
-      .finally(() => {
-        setIsSubmitting(false);
-        setIsPendingConfirmation(false);
-      });
+    const successfullyAdded = await addEtherspotPrimeTransaction({
+      to: positionTransaction.to,
+      value: positionTransaction.value,
+      data: positionTransaction.data,
+    });
+
+    if (!successfullyAdded) {
+      // err thrown inside addEtherspotPrimeTransaction
+      setIsConfirming(false);
+      setIsSubmitting(false);
+      setIsPendingConfirmation(false);
+      return;
+    }
+
+    const collateralDelta = toUsdMax.sub(triggerAmount);
+
+    await createDecreaseOrder(
+      chainId,
+      library,
+      indexTokenAddress,
+      triggerAmount,
+      collateralTokenAddress,
+      collateralDelta,
+      isLong,
+      triggerPriceUsd,
+      true,
+      {
+        ...uiParams,
+        etherspotPrimeSdk,
+      }
+    );
+
+    onPositionTransactionSubmitted();
   };
 
   const onSwapOptionChange = (opt) => {
@@ -1656,7 +1726,7 @@ export default function SwapBox(props) {
       await resetEtherspotPrimeTransactions();
     }
 
-    if (isStopOrder) {
+    if (!isEtherspotWallet && isStopOrder) {
       setOrderOption(MARKET);
       return;
     }
@@ -1715,9 +1785,10 @@ export default function SwapBox(props) {
   };
 
   const isStopOrder = orderOption === STOP;
-  const showFromAndToSection = !isStopOrder;
-  const showTriggerPriceSection = !isSwap && !isMarketOrder && !isStopOrder;
+  const showFromAndToSection = isEtherspotWallet || !isStopOrder;
+  const showTriggerPriceSection = !isSwap && !isMarketOrder && (isEtherspotWallet || !isStopOrder);
   const showTriggerRatioSection = isSwap && !isMarketOrder && !isStopOrder;
+  const showTriggerAmountSection = isStopOrder;
 
   let fees;
   let feesUsd;
@@ -1846,6 +1917,11 @@ export default function SwapBox(props) {
     const maxAvailableAmount = fromToken.isNative ? fromBalance.sub(bigNumberify(DUST_BNB).mul(2)) : fromBalance;
     setFromValue(formatAmountFree(maxAvailableAmount, fromToken.decimals, fromToken.decimals));
     setAnchorOnFromAmount(true);
+  }
+
+  function setTriggerAmountToMaximumAvailable() {
+    if (!fromUsdMin) return;
+    setTriggerAmountValue(formatAmount(fromUsdMin, USD_DECIMALS, 2, true));
   }
 
   function shouldShowMaxButton() {
@@ -2072,9 +2148,25 @@ export default function SwapBox(props) {
               })()}
             </BuyInputSection>
           )}
+          {showTriggerAmountSection && (
+            <BuyInputSection
+              topLeftLabel={t`Trigger amount`}
+              topRightLabel={t`Max`}
+              tokenBalance={formatAmount(fromUsdMin ?? 0, USD_DECIMALS, 2, true)}
+              onClickTopRightLabel={() => {
+                setTriggerAmountValue(formatAmountFree(fromUsdMin ?? 0, USD_DECIMALS, 2));
+              }}
+              showMaxButton={fromUsdMin > 0}
+              onClickMax={setTriggerAmountToMaximumAvailable}
+              inputValue={triggerAmountValue}
+              onInputValueChange={onTriggerAmountChange}
+            >
+              USD
+            </BuyInputSection>
+          )}
           {showTriggerPriceSection && (
             <BuyInputSection
-              topLeftLabel={t`Price`}
+              topLeftLabel={isStopOrder ? t`Trigger price` : t`Price`}
               topRightLabel={t`Mark`}
               tokenBalance={formatAmount(entryMarkPrice, USD_DECIMALS, 2, true)}
               onClickTopRightLabel={() => {
@@ -2107,7 +2199,7 @@ export default function SwapBox(props) {
               </ExchangeInfoRow>
             </div>
           )}
-          {(isLong || isShort) && !isStopOrder && (
+          {(isLong || isShort) && (isEtherspotWallet || !isStopOrder) && (
             <div className="Exchange-leverage-box">
               <ToggleSwitch
                 className="Exchange-leverage-toggle-wrapper"
@@ -2233,7 +2325,7 @@ export default function SwapBox(props) {
               </ExchangeInfoRow>
             </div>
           )}
-          {isStopOrder && (
+          {isStopOrder && !isEtherspotWallet && (
             <div className="Exchange-swap-section Exchange-trigger-order-info">
               <Trans>
                 Take-profit and stop-loss orders can be set after opening a position. <br />

@@ -29,13 +29,24 @@ function AddressDropdown({ account, accountUrl, disconnectAccountAndCloseSetting
   const { ensName } = useENS(account);
   const { provider: ethereumProvider } = useJsonRpcProvider(ETH_MAINNET);
   const [isEtherspotModalOpen, setIsEtherspotModalOpen] = useState(false);
-  const { isEtherspotWallet } = useEtherspotUiConfig();
+  const { isEtherspotWallet, setIsEtherspotWallet, etherspotIntroDisplayed } = useEtherspotUiConfig();
 
   return (
     <Menu>
       <Menu.Button as="div">
         <button className="App-cta small transparent address-btn">
-          <span className={`App-header-etherspot-status-icon${isEtherspotWallet ? ' etherspot-enabled-status' : ''}`} style={{ marginRight: 7 }}>
+          <span
+            className={`App-header-etherspot-status-icon${isEtherspotWallet ? ' etherspot-enabled-status' : ''}`}
+            style={{ marginRight: 7 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!etherspotIntroDisplayed) {
+                setIsEtherspotModalOpen(true);
+                return;
+              }
+              setIsEtherspotWallet(!isEtherspotWallet);
+            }}
+          >
             ⚡️
           </span>
           <div className="user-avatar">

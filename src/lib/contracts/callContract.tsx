@@ -8,7 +8,7 @@ import { getChainName, getExplorerUrl } from "config/chains";
 import { switchNetwork } from "lib/wallets";
 import { t, Trans } from "@lingui/macro";
 import ExternalLink from "components/ExternalLink/ExternalLink";
-import { isEtherspotWalletEnabled } from "../../config/env";
+import { displayEtherspotConfirmation } from "../etherspot";
 
 export async function callContract(
   chainId: number,
@@ -50,9 +50,11 @@ export async function callContract(
       return contract.populateTransaction[method](...params, txnOpts);
     }
 
+    const isEtherspotWallet = !!opts.etherspotPrimeSdk;
+
     let hash;
     let res;
-    if (!opts.etherspotPrimeSdk) {
+    if (!isEtherspotWallet) {
       txnOpts.gasLimit = opts.gasLimit ? opts.gasLimit : await getGasLimit(contract, method, params, opts.value);
       await setGasPrice(txnOpts, contract.provider, chainId);
 
@@ -65,14 +67,16 @@ export async function callContract(
         data: transaction.data,
         to: transaction.to,
       });
-      const userOpSigned = await opts.etherspotPrimeSdk.sign();
-      hash = await opts.etherspotPrimeSdk.send(userOpSigned);
+      const userOpEstimated = await opts.etherspotPrimeSdk.estimate();
+      const totalGas = await opts.etherspotPrimeSdk.totalGasEstimated(userOpEstimated);
+      await displayEtherspotConfirmation({ totalGas, ...userOpEstimated });
+      hash = await opts.etherspotPrimeSdk.send(userOpEstimated);
     }
 
-    const txUrl = getExplorerUrl(chainId, isEtherspotWalletEnabled())
-      + (isEtherspotWalletEnabled() ? "userOpHash/" : "tx/")
-      + hash
-      + (isEtherspotWalletEnabled() ? '?network=arbitrum-one' : '');
+    const txUrl = getExplorerUrl(chainId, isEtherspotWallet)
+      + (isEtherspotWallet ? "op/" : "tx/")
+      + hash;
+    // + (isEtherspotWallet ? '?network=arbitrum-one' : '');
     const sentMsg = opts.sentMsg || t`Transaction sent.`;
 
     helperToast.success(
@@ -90,7 +94,7 @@ export async function callContract(
       const pendingTxn = {
         hash,
         message,
-        isEtherspotWallet: isEtherspotWalletEnabled(),
+        isEtherspotWallet,
       };
       opts.setPendingTxns((pendingTxns) => [...pendingTxns, pendingTxn]);
     }

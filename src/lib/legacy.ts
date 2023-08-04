@@ -1238,7 +1238,7 @@ export function getHomeUrl() {
     return "http://localhost:3010";
   }
 
-  return "https://gmx.io";
+  return "https://gmx.etherspot.io";
 }
 
 export function getAppBaseUrl() {
@@ -1246,7 +1246,7 @@ export function getAppBaseUrl() {
     return "http://localhost:3011/#";
   }
 
-  return "https://app.gmx.io/#";
+  return "https://gmx.etherspot.io/#";
 }
 
 export function getRootShareApiUrl() {
@@ -1259,10 +1259,10 @@ export function getRootShareApiUrl() {
 
 export function getTradePageUrl() {
   if (isLocal()) {
-    return "http://localhost:3011/#/trade";
+    return "http://localhost:3011/";
   }
 
-  return "https://app.gmx.io/#/trade";
+  return "https://app.gmx.io/";
 }
 
 export function importImage(name) {
