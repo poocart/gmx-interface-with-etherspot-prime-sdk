@@ -1,41 +1,39 @@
 import { dynamicActivate, isTestLanguage, locales } from "lib/i18n";
 import { importImage } from "lib/legacy";
 import cx from "classnames";
-import { LANGUAGE_LOCALSTORAGE_KEY } from "config/localStorage";
 import checkedIcon from "img/ic_checked.svg";
 
 type Props = {
-  currentLanguage: {
-    current: string | undefined;
-  };
+  currentLanguage: string | undefined;
+  onClose: () => void;
 };
 
-export default function LanguageModalContent({ currentLanguage }: Props) {
+export default function LanguageModalContent({ currentLanguage, onClose }: Props) {
   return (
     <>
       {Object.keys(locales).map((item) => {
-        const image = importImage(`flag_${item}.svg`);
         return (
           <div
             key={item}
             className={cx("network-dropdown-menu-item  menu-item language-modal-item", {
-              active: currentLanguage.current === item,
+              active: currentLanguage === item,
             })}
             onClick={() => {
-              if (!isTestLanguage(item)) {
-                localStorage.setItem(LANGUAGE_LOCALSTORAGE_KEY, item);
-              }
-              dynamicActivate(item);
+              dynamicActivate(item).then(onClose);
             }}
           >
             <div className="menu-item-group">
               <div className="menu-item-icon">
-                {isTestLanguage(item) ? "🫐" : <img className="network-dropdown-icon" src={image} alt={locales[item]} />}
+                {isTestLanguage(item) ? (
+                  "🫐"
+                ) : (
+                  <img className="network-dropdown-icon" src={importImage(`flag_${item}.svg`)} alt={locales[item]} />
+                )}
               </div>
-              <span className="network-dropdown-item-label menu-item-label">{locales[item]}</span>
+              <span className="language-item">{locales[item]}</span>
             </div>
             <div className="network-dropdown-menu-item-img">
-              {currentLanguage.current === item && <img src={checkedIcon} alt={locales[item]} />}
+              {currentLanguage === item && <img src={checkedIcon} alt={locales[item]} />}
             </div>
           </div>
         );

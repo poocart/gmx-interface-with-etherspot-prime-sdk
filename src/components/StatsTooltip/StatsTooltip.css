@@ -1,15 +1,16 @@
 .Tooltip-row {
   display: grid;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.75rem 0;
   grid-template-columns: 1fr auto;
 }
 
-.Tooltip-row > span.label {
+.Tooltip-row .Tooltip-row-label {
   margin-right: 0.5rem;
 }
-.Tooltip-row > .Tooltip-row-value {
-  color: white;
+
+.Tooltip-row .Tooltip-row-value {
   text-align: right;
+  word-break: break-all;
 }
 
 .Tooltip-row-values {
@@ -24,21 +25,5 @@
 }
 
 .Tooltip-number {
-  color: white;
-}
-
-@media (max-width: 700px) {
-  .Tooltip-row {
-    display: block;
-    margin-bottom: 1rem;
-  }
-  .Tooltip-row > span.label {
-    display: block;
-  }
-  .Tooltip-row-values li {
-    text-align: left;
-  }
-  .Tooltip-row > .Tooltip-row-value {
-    text-align: left;
-  }
+  color: var(--color-white);
 }

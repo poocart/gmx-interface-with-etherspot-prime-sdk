@@ -5,13 +5,18 @@ import openInNewTab from "img/open-new-tab.svg";
 
 type ButtonProps = {
   children: ReactNode;
-  className: string;
+  className?: string;
   to: string;
-  showExternalLinkArrow: boolean;
-  onClick?: () => void;
+  showExternalLinkArrow?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLElement>) => void;
   newTab?: boolean;
   disabled?: boolean;
+  qa?: string;
 };
+
+function preventClick(e: React.MouseEvent<HTMLElement>) {
+  e.preventDefault();
+}
 
 export default function ButtonLink({
   className,
@@ -21,12 +26,13 @@ export default function ButtonLink({
   showExternalLinkArrow,
   newTab = false,
   disabled = false,
+  qa,
   ...rest
 }: ButtonProps) {
   const classNames = cx(className, { disabled: disabled });
   if (to.startsWith("http") || to.startsWith("https")) {
     const anchorProps = {
-      href: to,
+      href: disabled ? undefined : to,
       className: classNames,
       onClick,
       ...rest,
@@ -38,14 +44,14 @@ export default function ButtonLink({
         : {}),
     };
     return (
-      <a {...anchorProps}>
+      <a data-qa={qa} {...anchorProps}>
         {showExternalLinkArrow && <img className="arrow-icon" src={openInNewTab} width="100%" alt="open in new tab" />}
         {children}
       </a>
     );
   }
   return (
-    <Link className={classNames} to={to}>
+    <Link data-qa={qa} className={classNames} to={to} onClick={disabled ? preventClick : onClick}>
       {children}
     </Link>
   );

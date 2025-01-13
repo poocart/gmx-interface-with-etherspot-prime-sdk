@@ -13,10 +13,14 @@
   margin-top: 0.8rem;
 }
 
+.DashboardV2-token-cards .Tooltip-popup {
+  min-width: 32rem;
+}
+
 .token-table-wrapper {
   border-radius: 0.4rem;
-  background: #17182c;
-  padding: 0 1.5rem;
+  background: var(--color-slate-800);
+  margin-bottom: 1.5rem;
   text-align: left;
 }
 
@@ -25,9 +29,9 @@
 }
 
 .token-table-wrapper .App-card-title img {
-  margin-top: 0.3rem;
   display: inline-flex;
-  margin-left: 0.8rem;
+  align-items: center;
+  margin-left: 0.5rem;
 }
 
 .App-card-title-icon {
@@ -65,14 +69,14 @@
 }
 
 .stats-label {
-  font-size: var(--font-sm);
-  line-height: 1.6rem;
+  font-size: var(--font-size-body-medium);
+  line-height: var(--line-height-body-medium);
   border-radius: 0.4rem;
   padding: 1.05rem;
   letter-spacing: 0.4px;
   text-align: left;
   z-index: 1;
-  background: linear-gradient(90deg, #0b0b0f 0%, rgba(10, 13, 28, 1) 100%);
+  background: linear-gradient(270deg, rgba(49, 54, 85, 1) 0%, rgba(37, 40, 65, 1) 100%);
   cursor: pointer;
 }
 
@@ -133,7 +137,7 @@
 }
 
 .glp-composition-small {
-  display: none;
+  display: none !important;
 }
 
 @media (max-width: 1024px) {
@@ -157,13 +161,19 @@
     margin-bottom: 0;
   }
   .glp-composition-small {
-    display: block;
+    display: inline-block !important;
   }
 }
 
 @media (max-width: 900px) {
   .DashboardV2-cards {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .DashboardV2-token-cards .Tooltip-popup {
+    min-width: 27rem;
   }
 }
 

@@ -9,12 +9,17 @@
 .input-label {
   display: block;
   margin-bottom: 0.8rem;
-  font-size: var(--font-base);
+  font-size: var(--font-size-body-medium);
 }
 
 .text-input {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-size: var(--font-base);
+  color: var(--color-slate-100);
+  border: 1px solid var(--color-gray-700);
+  font-size: var(--font-size-body-medium);
   width: 100%;
   box-sizing: border-box;
+
+  &::placeholder {
+    color: var(--color-slate-500);
+  }
 }

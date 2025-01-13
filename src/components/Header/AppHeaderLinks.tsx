@@ -1,29 +1,34 @@
-import React from "react";
-import { FiX } from "react-icons/fi";
 import { Trans } from "@lingui/macro";
+import { useCallback } from "react";
+import { FiX } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
-import { HeaderLink } from "./HeaderLink";
-import "./Header.css";
-import { isHomeSite } from "lib/legacy";
 import ExternalLink from "components/ExternalLink/ExternalLink";
+
+import { isHomeSite } from "lib/legacy";
+import { useNotifyModalState } from "lib/useNotifyModalState";
+import { userAnalytics } from "lib/userAnalytics";
+import { ReferralTopMenuClickEvent } from "lib/userAnalytics/types";
+
 import logoImg from "img/logo_GMX.svg";
+import { HeaderLink } from "./HeaderLink";
+
+import "./Header.scss";
 
 type Props = {
   small?: boolean;
   clickCloseIcon?: () => void;
   openSettings?: () => void;
-  redirectPopupTimestamp: number;
   showRedirectModal: (to: string) => void;
 };
 
-export function AppHeaderLinks({
-  small,
-  openSettings,
-  clickCloseIcon,
-  redirectPopupTimestamp,
-  showRedirectModal,
-}: Props) {
+export function AppHeaderLinks({ small, openSettings, clickCloseIcon, showRedirectModal }: Props) {
+  const { openNotifyModal } = useNotifyModalState();
+
+  const isLeaderboardActive = useCallback(
+    (match, location) => Boolean(match) || location.pathname.startsWith("/competitions"),
+    []
+  );
   return (
     <div className="App-header-links">
       {small && (
@@ -32,7 +37,7 @@ export function AppHeaderLinks({
             <img src={logoImg} alt="GMX Logo" />
           </Link>
           <div
-            className="App-header-menu-icon-block mobile-cross-menu"
+            className="App-header-menu-icon-block max-w-[450px]:mr-12 mr-8 !border-0"
             onClick={() => clickCloseIcon && clickCloseIcon()}
           >
             <FiX className="App-header-menu-icon" />
@@ -40,28 +45,32 @@ export function AppHeaderLinks({
         </div>
       )}
       <div className="App-header-link-container">
-        <HeaderLink
-          to="/dashboard"
-          redirectPopupTimestamp={redirectPopupTimestamp}
-          showRedirectModal={showRedirectModal}
-        >
+        <HeaderLink qa="dashboard" to="/dashboard" showRedirectModal={showRedirectModal}>
           <Trans>Dashboard</Trans>
         </HeaderLink>
       </div>
       <div className="App-header-link-container">
-        <HeaderLink to="/earn" redirectPopupTimestamp={redirectPopupTimestamp} showRedirectModal={showRedirectModal}>
+        <HeaderLink qa="earn" to="/earn" showRedirectModal={showRedirectModal}>
           <Trans>Earn</Trans>
         </HeaderLink>
       </div>
       <div className="App-header-link-container">
-        <HeaderLink to="/buy" redirectPopupTimestamp={redirectPopupTimestamp} showRedirectModal={showRedirectModal}>
+        <HeaderLink qa="buy" to="/buy" showRedirectModal={showRedirectModal}>
           <Trans>Buy</Trans>
         </HeaderLink>
       </div>
       <div className="App-header-link-container">
         <HeaderLink
+          onClick={() => {
+            userAnalytics.pushEvent<ReferralTopMenuClickEvent>({
+              event: "ReferralCodeAction",
+              data: {
+                action: "ReferralTopMenuClick",
+              },
+            });
+          }}
+          qa="referrals"
           to="/referrals"
-          redirectPopupTimestamp={redirectPopupTimestamp}
           showRedirectModal={showRedirectModal}
         >
           <Trans>Referrals</Trans>
@@ -69,22 +78,35 @@ export function AppHeaderLinks({
       </div>
       <div className="App-header-link-container">
         <HeaderLink
-          to="/ecosystem"
-          redirectPopupTimestamp={redirectPopupTimestamp}
+          qa="leaderboard"
+          to="/leaderboard"
           showRedirectModal={showRedirectModal}
+          isActive={isLeaderboardActive}
         >
+          <Trans>Leaderboard</Trans>
+        </HeaderLink>
+      </div>
+      <div className="App-header-link-container">
+        <HeaderLink qa="ecosystem" to="/ecosystem" showRedirectModal={showRedirectModal}>
           <Trans>Ecosystem</Trans>
         </HeaderLink>
       </div>
       <div className="App-header-link-container">
-        <ExternalLink href="https://gmxio.gitbook.io/gmx/">
+        <ExternalLink href="https://docs.gmx.io/">
           <Trans>Docs</Trans>
         </ExternalLink>
       </div>
+      {small && (
+        <div className="App-header-link-container">
+          <a href="#" onClick={openNotifyModal}>
+            <Trans>Alerts</Trans>
+          </a>
+        </div>
+      )}
       {small && !isHomeSite() && (
         <div className="App-header-link-container">
           {/* eslint-disable-next-line */}
-          <a href="#" onClick={openSettings}>
+          <a href="#" data-qa="settings" onClick={openSettings}>
             <Trans>Settings</Trans>
           </a>
         </div>

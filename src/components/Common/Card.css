@@ -1,23 +1,22 @@
 .card {
   border-radius: 0.4rem;
-  background: #16182e;
+  background: var(--color-slate-800);
 }
 
 .card-header {
-  font-size: var(--font-md);
-  line-height: 2.1rem;
+  font-size: var(--font-size-body-large);
+  line-height: var(--line-height-body-large);
   font-weight: normal;
   letter-spacing: 0px;
-  color: #ffffff;
+  color: var(--color-white);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem;
 }
 
 .card-divider {
   height: 1px;
-  background: #23263b;
+  background: var(--color-slate-700);
 }
 .card-body {
   padding: 1.5rem;

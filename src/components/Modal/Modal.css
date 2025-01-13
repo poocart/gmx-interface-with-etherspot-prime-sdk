@@ -34,12 +34,14 @@
   max-width: 100%;
   max-height: 90vh;
   overflow: auto;
-  background: #16182e;
+  background: var(--color-slate-800);
   border-radius: 4px;
+  display: flex;
+  flex-direction: column;
 }
 
 .divider {
-  border-bottom: 1px solid #ffffff29;
+  border-bottom: 1px solid var(--color-stroke-primary);
 }
 
 .Modal.non-scrollable .Modal-content {
@@ -57,31 +59,20 @@
 }
 
 .Modal-body {
-  max-height: calc(80vh - 8.5rem);
-  overflow-y: auto;
   /* for scrollbar to have a space on left and right */
-  padding: 1.5rem 1rem 1.5rem 1.5rem;
-  margin-right: 0.5rem;
+  margin: 1.5rem 1rem 1.5rem 1.5rem;
+  padding-right: 0.5rem;
 }
 
-.Modal-body::-webkit-scrollbar {
-  width: 0.6rem;
-}
-
-.Modal-body::-webkit-scrollbar-track {
-  background-color: #1c1c1c;
-  border-radius: 155rem;
-}
-
-.Modal-body::-webkit-scrollbar-thumb {
-  background-color: #949393;
-  border-radius: 155rem;
+.Modal-body.no-content-padding {
+  margin: 0;
+  padding-right: 0.5rem;
 }
 
 .Modal-title {
   text-align: left;
-  font-size: var(--font-md);
-  line-height: 1;
+  font-size: var(--font-size-body-large);
+  line-height: var(--line-height-body-large);
 }
 
 .Modal-close-button {
@@ -89,17 +80,11 @@
 }
 
 .Modal-close-icon {
-  opacity: 0.6;
+  color: var(--color-slate-100);
   cursor: pointer;
   text-align: right;
-  display: inline-block;
 }
 
 .Modal-close-icon:hover {
   opacity: 0.9;
-}
-
-.Modal-note {
-  margin-bottom: 1.5rem;
-  margin-top: 0.8rem;
 }

@@ -1,26 +1,31 @@
+import React, { useCallback, useRef } from "react";
 import { useLocalStorage } from "react-use";
-import { useCallback } from "react";
+import { SHOW_DEBUG_VALUES_KEY } from "config/localStorage";
 
 export function useLocalStorageByChainId<T>(
   chainId: number,
   key: string,
   defaultValue: T
-): [T | undefined, (value: T) => void] {
+): [T | undefined, React.Dispatch<React.SetStateAction<T>>] {
   const [internalValue, setInternalValue] = useLocalStorage(key, {});
+  const internalValueRef = useRef(internalValue);
 
-  const setValue = useCallback(
+  const setValue: React.Dispatch<React.SetStateAction<T>> = useCallback(
     (value) => {
-      setInternalValue((internalValue) => {
-        if (typeof value === "function") {
-          value = value(internalValue?.[chainId] || defaultValue);
-        }
+      const internalValue = internalValueRef.current;
+      if (typeof value === "function") {
+        // @ts-ignore
+        value = value(internalValue?.[chainId] || defaultValue);
+      }
 
-        const newInternalValue = {
-          ...internalValue,
-          [chainId]: value,
-        };
-        return newInternalValue;
-      });
+      const newInternalValue = {
+        ...internalValue,
+        [chainId]: value,
+      };
+
+      internalValueRef.current = newInternalValue;
+
+      setInternalValue(newInternalValue);
     },
     [chainId, setInternalValue, defaultValue]
   );
@@ -36,9 +41,11 @@ export function useLocalStorageByChainId<T>(
   return [value, setValue];
 }
 
+export type LocalStorageKey = string | number | boolean | null | undefined;
+
 export function useLocalStorageSerializeKey<T>(
-  key: string | any[],
-  value: T,
+  key: LocalStorageKey | LocalStorageKey[],
+  initialValue: T,
   opts?: {
     raw: boolean;
     serializer: (val: T) => string;
@@ -47,5 +54,9 @@ export function useLocalStorageSerializeKey<T>(
 ) {
   key = JSON.stringify(key);
 
-  return useLocalStorage<T>(key, value, opts);
+  return useLocalStorage<T>(key, initialValue, opts);
+}
+
+export function isDebugMode() {
+  return localStorage.getItem(JSON.stringify(SHOW_DEBUG_VALUES_KEY)) === "true";
 }

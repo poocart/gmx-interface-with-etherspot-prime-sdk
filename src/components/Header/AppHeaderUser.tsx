@@ -1,29 +1,39 @@
-import { useWeb3React } from "@web3-react/core";
-import AddressDropdown from "../AddressDropdown/AddressDropdown";
-import ConnectWalletButton from "../Common/ConnectWalletButton";
-import React, { useCallback, useEffect } from "react";
-import { HeaderLink } from "./HeaderLink";
+import { Trans } from "@lingui/macro";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import cx from "classnames";
+
+import { useCallback } from "react";
+import { useRouteMatch } from "react-router-dom";
+
 import connectWalletImg from "img/ic_wallet_24.svg";
 
-import "./Header.css";
-import { isHomeSite, getAccountUrl } from "lib/legacy";
-import cx from "classnames";
-import { Trans } from "@lingui/macro";
-import NetworkDropdown from "../NetworkDropdown/NetworkDropdown";
-import LanguagePopupHome from "../NetworkDropdown/LanguagePopupHome";
-import { ARBITRUM, ARBITRUM_TESTNET, AVALANCHE, AVALANCHE_FUJI, getChainName } from "config/chains";
-import { switchNetwork } from "lib/wallets";
-import { useChainId } from "lib/chains";
+import { ARBITRUM, AVALANCHE, AVALANCHE_FUJI, getChainName } from "config/chains";
 import { isDevelopment } from "config/env";
 import { getIcon } from "config/icons";
+
+import { useChainId } from "lib/chains";
+import { getAccountUrl, isHomeSite, shouldShowRedirectModal } from "lib/legacy";
+import { useTradePageVersion } from "lib/useTradePageVersion";
+import { sendUserAnalyticsConnectWalletClickEvent, userAnalytics } from "lib/userAnalytics";
+import { LandingPageLaunchAppEvent } from "lib/userAnalytics/types";
+import useWallet from "lib/wallets/useWallet";
+import { useRedirectPopupTimestamp } from "lib/useRedirectPopupTimestamp";
+
+import AddressDropdown from "../AddressDropdown/AddressDropdown";
+import ConnectWalletButton from "../Common/ConnectWalletButton";
+import LanguagePopupHome from "../NetworkDropdown/LanguagePopupHome";
+import NetworkDropdown from "../NetworkDropdown/NetworkDropdown";
+import { NotifyButton } from "../NotifyButton/NotifyButton";
+import { HeaderLink } from "./HeaderLink";
+
+import "./Header.scss";
 
 type Props = {
   openSettings: () => void;
   small?: boolean;
-  setWalletModalVisible: (visible: boolean) => void;
   disconnectAccountAndCloseSettings: () => void;
-  redirectPopupTimestamp: number;
   showRedirectModal: (to: string) => void;
+  menuToggle?: React.ReactNode;
 };
 
 const NETWORK_OPTIONS = [
@@ -43,12 +53,6 @@ const NETWORK_OPTIONS = [
 
 if (isDevelopment()) {
   NETWORK_OPTIONS.push({
-    label: getChainName(ARBITRUM_TESTNET),
-    value: ARBITRUM_TESTNET,
-    icon: getIcon(ARBITRUM_TESTNET, "network"),
-    color: "#264f79",
-  });
-  NETWORK_OPTIONS.push({
     label: getChainName(AVALANCHE_FUJI),
     value: AVALANCHE_FUJI,
     icon: getIcon(AVALANCHE_FUJI, "network"),
@@ -57,65 +61,82 @@ if (isDevelopment()) {
 }
 
 export function AppHeaderUser({
-  openSettings,
   small,
-  setWalletModalVisible,
+  menuToggle,
+  openSettings,
   disconnectAccountAndCloseSettings,
-  redirectPopupTimestamp,
   showRedirectModal,
 }: Props) {
   const { chainId } = useChainId();
-  const { active, account } = useWeb3React();
+  const { active, account } = useWallet();
+  const { openConnectModal } = useConnectModal();
   const showConnectionOptions = !isHomeSite();
+  const [tradePageVersion] = useTradePageVersion();
+  const [redirectPopupTimestamp] = useRedirectPopupTimestamp();
 
-  useEffect(() => {
-    if (active) {
-      setWalletModalVisible(false);
-    }
-  }, [active, setWalletModalVisible]);
-
-  const onNetworkSelect = useCallback(
-    (option) => {
-      if (option.value === chainId) {
-        return;
-      }
-      return switchNetwork(option.value, active);
-    },
-    [chainId, active]
-  );
+  const tradeLink = tradePageVersion === 2 ? "/trade" : "/v1";
+  const isOnTradePageV1 = useRouteMatch("/v1");
+  const isOnTradePageV2 = useRouteMatch("/trade");
+  const shouldHideTradeButton = isOnTradePageV1 || isOnTradePageV2;
 
   const selectorLabel = getChainName(chainId);
+
+  const trackLaunchApp = useCallback(() => {
+    userAnalytics.pushEvent<LandingPageLaunchAppEvent>(
+      {
+        event: "LandingPageAction",
+        data: {
+          action: "LaunchApp",
+          buttonPosition: "StickyHeader",
+          shouldSeeConfirmationDialog: shouldShowRedirectModal(redirectPopupTimestamp),
+        },
+      },
+      { instantSend: true }
+    );
+  }, [redirectPopupTimestamp]);
 
   if (!active || !account) {
     return (
       <div className="App-header-user">
-        <div className={cx("App-header-trade-link", { "homepage-header": isHomeSite() })}>
-          <HeaderLink
-            className="default-btn"
-            to="/trade"
-            redirectPopupTimestamp={redirectPopupTimestamp}
-            showRedirectModal={showRedirectModal}
+        {shouldHideTradeButton ? null : (
+          <div
+            data-qa="trade"
+            className={cx("App-header-trade-link text-body-medium", { "homepage-header": isHomeSite() })}
           >
-            {isHomeSite() ? <Trans>Launch App</Trans> : <Trans>Trade</Trans>}
-          </HeaderLink>
-        </div>
+            <HeaderLink
+              className="default-btn"
+              onClick={trackLaunchApp}
+              to={`${tradeLink}?${isHomeSite() ? userAnalytics.getSessionIdUrlParams() : ""}`}
+              showRedirectModal={showRedirectModal}
+            >
+              {isHomeSite() ? <Trans>Launch App</Trans> : <Trans>Trade</Trans>}
+            </HeaderLink>
+          </div>
+        )}
 
-        {showConnectionOptions ? (
+        {showConnectionOptions && openConnectModal ? (
           <>
-            <ConnectWalletButton onClick={() => setWalletModalVisible(true)} imgSrc={connectWalletImg}>
+            <ConnectWalletButton
+              onClick={() => {
+                sendUserAnalyticsConnectWalletClickEvent("Header");
+                openConnectModal();
+              }}
+              imgSrc={connectWalletImg}
+            >
               {small ? <Trans>Connect</Trans> : <Trans>Connect Wallet</Trans>}
             </ConnectWalletButton>
+            {!small && <NotifyButton />}
             <NetworkDropdown
               small={small}
               networkOptions={NETWORK_OPTIONS}
               selectorLabel={selectorLabel}
-              onNetworkSelect={onNetworkSelect}
               openSettings={openSettings}
             />
           </>
         ) : (
           <LanguagePopupHome />
         )}
+        {menuToggle}
       </div>
     );
   }
@@ -124,37 +145,40 @@ export function AppHeaderUser({
 
   return (
     <div className="App-header-user">
-      <div className="App-header-trade-link">
-        <HeaderLink
-          className="default-btn"
-          to="/trade"
-          redirectPopupTimestamp={redirectPopupTimestamp}
-          showRedirectModal={showRedirectModal}
-        >
-          <Trans>Trade</Trans>
-        </HeaderLink>
+      <div data-qa="trade" className="App-header-trade-link text-body-medium">
+        {shouldHideTradeButton ? null : (
+          <HeaderLink
+            className="default-btn"
+            onClick={trackLaunchApp}
+            to={`${tradeLink}?${isHomeSite() ? userAnalytics.getSessionIdUrlParams() : ""}`}
+            showRedirectModal={showRedirectModal}
+          >
+            {isHomeSite() ? <Trans>Launch App</Trans> : <Trans>Trade</Trans>}
+          </HeaderLink>
+        )}
       </div>
 
       {showConnectionOptions ? (
         <>
-          <div className="App-header-user-address">
+          <div data-qa="user-address" className="App-header-user-address">
             <AddressDropdown
               account={account}
               accountUrl={accountUrl}
               disconnectAccountAndCloseSettings={disconnectAccountAndCloseSettings}
             />
           </div>
+          {!small && <NotifyButton />}
           <NetworkDropdown
             small={small}
             networkOptions={NETWORK_OPTIONS}
             selectorLabel={selectorLabel}
-            onNetworkSelect={onNetworkSelect}
             openSettings={openSettings}
           />
         </>
       ) : (
         <LanguagePopupHome />
       )}
+      {menuToggle}
     </div>
   );
 }

@@ -1,12 +1,14 @@
-import Tooltip from "../Tooltip/Tooltip";
+import Tooltip, { TooltipPosition } from "../Tooltip/Tooltip";
+import cx from "classnames";
 import { ReactNode } from "react";
 
 type Props = {
   label: string;
-  value: string;
+  value?: string;
   labelTooltipText?: string;
-  tooltipPosition?: string;
+  tooltipPosition?: TooltipPosition;
   tooltipContent?: ReactNode;
+  className?: string;
   children?: ReactNode;
 };
 
@@ -16,10 +18,11 @@ function ReferralInfoCard({
   labelTooltipText,
   children,
   tooltipContent,
-  tooltipPosition = "left-bottom",
+  tooltipPosition = "bottom",
+  className,
 }: Props) {
   return (
-    <div className="info-card">
+    <div className={cx("info-card", className)}>
       <div className="card-details">
         <h3 className="card-label">
           {labelTooltipText ? (
@@ -30,7 +33,12 @@ function ReferralInfoCard({
         </h3>
         <div className="card-data">
           {tooltipContent && (
-            <Tooltip position="center-bottom" className="nowrap" handle={value} renderContent={() => tooltipContent} />
+            <Tooltip
+              position="bottom"
+              className="whitespace-nowrap"
+              handle={value}
+              renderContent={() => tooltipContent}
+            />
           )}
           {children}
         </div>
