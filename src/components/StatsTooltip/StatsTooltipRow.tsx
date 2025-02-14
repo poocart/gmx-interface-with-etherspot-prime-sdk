@@ -1,31 +1,59 @@
+import { ReactNode } from "react";
+import cx from "classnames";
 import "./StatsTooltip.css";
-type Props = {
-  label: string;
-  value: number | string | string[] | number[];
+
+export type StatsTooltipRowProps = {
+  textClassName?: string;
+  labelClassName?: string;
+  label: string | ReactNode;
+  value: number | string | string[] | number[] | ReactNode;
   showDollar?: boolean;
+  unit?: string;
+  showColon?: boolean;
 };
 
-export default function StatsTooltipRow({ label, value, showDollar = true }: Props) {
+export default function StatsTooltipRow({
+  label,
+  value,
+  textClassName = "text-white",
+  labelClassName = "text-slate-100",
+  showDollar = true,
+  unit,
+  showColon = true,
+}: StatsTooltipRowProps) {
   function renderValue() {
     if (Array.isArray(value)) {
       return (
-        <ul className="Tooltip-row-values">
+        <ul className="Tooltip-row-values text-white">
           {value.map((v, i) => (
-            <li key={i}>{v}</li>
+            <li className={textClassName} key={i}>
+              {v}
+            </li>
           ))}
         </ul>
       );
     }
+
     return (
-      <span className="Tooltip-row-value">
+      <span className={cx("Tooltip-row-value", textClassName)}>
         {showDollar && "$"}
         {value}
+        {unit || ""}
       </span>
     );
   }
+
+  function renderLabel() {
+    if (typeof label === "string") {
+      return showColon ? `${label}:` : label;
+    }
+
+    return label;
+  }
+
   return (
-    <div className="Tooltip-row">
-      <span className="label">{label}:</span>
+    <div className={cx("Tooltip-row", textClassName)}>
+      <span className={cx("Tooltip-row-label", labelClassName)}>{renderLabel()}</span>
       {renderValue()}
     </div>
   );

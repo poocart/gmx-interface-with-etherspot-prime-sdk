@@ -1,22 +1,22 @@
-import { BigNumber, ethers } from "ethers";
+import { getExplorerUrl } from "config/chains";
+import { getVisibleV1Tokens, getWhitelistedV1Tokens } from "sdk/configs/tokens";
+import { ethers } from "ethers";
 import {
-  adjustForDecimals,
   DUST_BNB,
-  getFeeBasisPoints,
   MARKET,
   MINT_BURN_FEE_BASIS_POINTS,
-  PRECISION,
   TAX_BASIS_POINTS,
-  USD_DECIMALS,
   USDG_ADDRESS,
   USDG_DECIMALS,
+  adjustForDecimals,
+  getFeeBasisPoints,
 } from "lib/legacy";
-import { getVisibleTokens, getWhitelistedTokens } from "config/tokens";
-import { getExplorerUrl } from "config/chains";
-import { InfoTokens, Token, TokenInfo } from "./types";
-import { bigNumberify, expandDecimals } from "lib/numbers";
+import { USD_DECIMALS } from "config/factors";
+import { expandDecimals, PRECISION } from "lib/numbers";
+import { InfoTokens, Token, TokenInfo, TokenPrices } from "sdk/types/tokens";
+import { convertToTokenAmount } from "domain/synthetics/tokens/utils";
 
-const { AddressZero } = ethers.constants;
+const { ZeroAddress } = ethers;
 
 export function getTokenUrl(chainId: number, address: string) {
   if (!address) {
@@ -25,44 +25,52 @@ export function getTokenUrl(chainId: number, address: string) {
   return getExplorerUrl(chainId) + "token/" + address;
 }
 
+export function getIsWrap(token1: Token, token2: Token) {
+  return token1.isNative && token2.isWrapped;
+}
+
+export function getIsUnwrap(token1: Token, token2: Token) {
+  return token1.isWrapped && token2.isNative;
+}
+
 export function getUsd(
-  amount: BigNumber | undefined,
+  amount: bigint | undefined,
   tokenAddress: string,
   max: boolean,
   infoTokens: InfoTokens,
   orderOption?: string,
-  triggerPriceUsd?: BigNumber
+  triggerPriceUsd?: bigint
 ) {
-  if (!amount) {
+  if (amount === undefined) {
     return;
   }
   if (tokenAddress === USDG_ADDRESS) {
-    return amount.mul(PRECISION).div(expandDecimals(1, 18));
+    return (amount * PRECISION) / expandDecimals(1, 18);
   }
   const info = getTokenInfo(infoTokens, tokenAddress);
   const price = getTriggerPrice(tokenAddress, max, info, orderOption, triggerPriceUsd);
-  if (!price) {
+  if (price === undefined) {
     return;
   }
 
-  return amount.mul(price).div(expandDecimals(1, info.decimals));
+  return (amount * price) / expandDecimals(1, info.decimals);
 }
 
 export function getTokenAmountFromUsd(
   infoTokens: InfoTokens,
   tokenAddress: string,
-  usdAmount?: BigNumber,
+  usdAmount?: bigint,
   opts: {
     max?: boolean;
-    overridePrice?: BigNumber;
+    overridePrice?: bigint;
   } = {}
 ) {
-  if (!usdAmount) {
+  if (usdAmount === undefined) {
     return;
   }
 
   if (tokenAddress === USDG_ADDRESS) {
-    return usdAmount.mul(expandDecimals(1, 18)).div(PRECISION);
+    return (usdAmount * expandDecimals(1, 18)) / PRECISION;
   }
 
   const info: TokenInfo | undefined = getTokenInfo(infoTokens, tokenAddress);
@@ -71,13 +79,13 @@ export function getTokenAmountFromUsd(
     return;
   }
 
-  const price = opts.overridePrice || (opts.max ? info.maxPrice : info.minPrice);
+  const price = opts.overridePrice ?? (opts.max ? info.maxPrice : info.minPrice);
 
-  if (!BigNumber.isBigNumber(price) || price.lte(0)) {
+  if (price === undefined || price <= 0) {
     return;
   }
 
-  return usdAmount.mul(expandDecimals(1, info.decimals)).div(price);
+  return (usdAmount * expandDecimals(1, info.decimals)) / price;
 }
 
 export function getTriggerPrice(
@@ -85,10 +93,10 @@ export function getTriggerPrice(
   max: boolean,
   info: TokenInfo,
   orderOption?: string,
-  triggerPriceUsd?: BigNumber
+  triggerPriceUsd?: bigint
 ) {
   // Limit/stop orders are executed with price specified by user
-  if (orderOption && orderOption !== MARKET && triggerPriceUsd) {
+  if (orderOption && orderOption !== MARKET && triggerPriceUsd !== undefined) {
     return triggerPriceUsd;
   }
 
@@ -96,10 +104,10 @@ export function getTriggerPrice(
   if (!info) {
     return;
   }
-  if (max && !info.maxPrice) {
+  if (max && info.maxPrice === undefined) {
     return;
   }
-  if (!max && !info.minPrice) {
+  if (!max && info.minPrice === undefined) {
     return;
   }
   return max ? info.maxPrice : info.minPrice;
@@ -112,7 +120,7 @@ export function getTokenInfo(
   nativeTokenAddress?: string
 ) {
   if (replaceNative && tokenAddress === nativeTokenAddress) {
-    return infoTokens[AddressZero];
+    return infoTokens[ZeroAddress];
   }
 
   return infoTokens[tokenAddress];
@@ -120,21 +128,29 @@ export function getTokenInfo(
 
 export function getLowestFeeTokenForBuyGlp(
   chainId: number,
-  toAmount: BigNumber,
-  glpPrice: BigNumber,
-  usdgSupply: BigNumber,
-  totalTokenWeights: BigNumber,
+  toAmount: bigint,
+  glpPrice: bigint,
+  usdgSupply: bigint,
+  totalTokenWeights: bigint,
   infoTokens: InfoTokens,
   fromTokenAddress: string,
-  swapUsdMin: BigNumber
-): { token: Token; fees: number; amountLeftToDeposit: BigNumber } | undefined {
-  if (!chainId || !toAmount || !infoTokens || !glpPrice || !usdgSupply || !totalTokenWeights || !swapUsdMin) {
+  swapUsdMin: bigint
+): { token: Token; fees: number; amountLeftToDeposit: bigint } | undefined {
+  if (
+    !chainId ||
+    toAmount === undefined ||
+    !infoTokens ||
+    glpPrice === undefined ||
+    usdgSupply === undefined ||
+    totalTokenWeights === undefined ||
+    swapUsdMin === undefined
+  ) {
     return;
   }
 
-  const tokens = getVisibleTokens(chainId);
+  const tokens = getVisibleV1Tokens(chainId);
 
-  const usdgAmount = toAmount.mul(glpPrice).div(PRECISION);
+  const usdgAmount = (toAmount * glpPrice) / PRECISION;
 
   const tokensData = tokens.map((token) => {
     const fromToken = getTokenInfo(infoTokens, token.address);
@@ -150,18 +166,17 @@ export function getLowestFeeTokenForBuyGlp(
       totalTokenWeights
     );
 
-    let amountLeftToDeposit = bigNumberify(0)!;
+    let amountLeftToDeposit = 0n;
 
     if (
-      fromToken.maxUsdgAmount &&
-      fromToken.maxUsdgAmount.gt(0) &&
-      fromToken.usdgAmount &&
-      fromToken.usdgAmount.gt(0)
+      fromToken.maxUsdgAmount !== undefined &&
+      fromToken.maxUsdgAmount > 0 &&
+      fromToken.usdgAmount !== undefined &&
+      fromToken.usdgAmount > 0
     ) {
-      amountLeftToDeposit = fromToken.maxUsdgAmount
-        .sub(fromToken.usdgAmount)
-        .mul(expandDecimals(1, USD_DECIMALS))
-        .div(expandDecimals(1, USDG_DECIMALS));
+      amountLeftToDeposit =
+        ((fromToken.maxUsdgAmount - fromToken.usdgAmount) * expandDecimals(1, USD_DECIMALS)) /
+        expandDecimals(1, USDG_DECIMALS);
     }
     return { token, fees, amountLeftToDeposit };
   });
@@ -170,29 +185,30 @@ export function getLowestFeeTokenForBuyGlp(
     .filter(
       (asset) =>
         asset.token.address !== fromTokenAddress &&
+        // eslint-disable-next-line no-prototype-builtins
         asset.hasOwnProperty("fees") &&
-        swapUsdMin.lt(asset.amountLeftToDeposit)
+        swapUsdMin < asset.amountLeftToDeposit
     )
     .sort((a, b) => a.fees - b.fees);
 
   return tokensWithLiquidity.length > 0
     ? tokensWithLiquidity[0]
-    : tokensData.sort((a, b) => Number(b.amountLeftToDeposit.sub(a.amountLeftToDeposit)))[0];
+    : tokensData.sort((a, b) => Number(b.amountLeftToDeposit - a.amountLeftToDeposit))[0];
 }
 
 export function getMostAbundantStableToken(chainId: number, infoTokens: InfoTokens) {
-  const whitelistedTokens = getWhitelistedTokens(chainId);
-  let availableAmount;
+  const whitelistedTokens = getWhitelistedV1Tokens(chainId);
+  let availableAmount: bigint | undefined;
   let stableToken = whitelistedTokens.find((t) => t.isStable);
 
   for (let i = 0; i < whitelistedTokens.length; i++) {
     const info = getTokenInfo(infoTokens, whitelistedTokens[i].address);
-    if (!info.isStable || !info.availableAmount) {
+    if (!info.isStable || info.availableAmount === undefined) {
       continue;
     }
 
     const adjustedAvailableAmount = adjustForDecimals(info.availableAmount, info.decimals, USD_DECIMALS);
-    if (!availableAmount || adjustedAvailableAmount.gt(availableAmount)) {
+    if (availableAmount === undefined || adjustedAvailableAmount > availableAmount) {
       availableAmount = adjustedAvailableAmount;
       stableToken = info;
     }
@@ -201,20 +217,20 @@ export function getMostAbundantStableToken(chainId: number, infoTokens: InfoToke
   return stableToken as TokenInfo;
 }
 
-export function shouldRaiseGasError(token: TokenInfo, amount?: BigNumber) {
-  if (!amount) {
+export function shouldRaiseGasError(token: TokenInfo, amount?: bigint) {
+  if (amount === undefined) {
     return false;
   }
-  if (token.address !== AddressZero) {
+  if (token.address !== ZeroAddress) {
     return false;
   }
-  if (!token.balance) {
+  if (token.balance === undefined) {
     return false;
   }
-  if (amount.gte(token.balance)) {
+  if (amount >= token.balance) {
     return true;
   }
-  if (token.balance.sub(amount).lt(DUST_BNB)) {
+  if (token.balance - amount < BigInt(DUST_BNB)) {
     return true;
   }
   return false;
@@ -229,7 +245,7 @@ export const replaceNativeTokenAddress = (path: string[], nativeTokenAddress: st
 
   for (let i = 0; i < path.length; i++) {
     let address = path[i];
-    if (address === AddressZero) {
+    if (address === ZeroAddress) {
       address = nativeTokenAddress;
     }
     updatedPath.push(address);
@@ -238,7 +254,26 @@ export const replaceNativeTokenAddress = (path: string[], nativeTokenAddress: st
   return updatedPath;
 };
 
-export function getSpread(p: { minPrice: BigNumber; maxPrice: BigNumber }): BigNumber {
-  const diff = p.maxPrice.sub(p.minPrice);
-  return diff.mul(PRECISION).div(p.maxPrice.add(p.minPrice).div(2));
+export function getSpread(p: { minPrice: bigint; maxPrice: bigint }): bigint {
+  const diff = p.maxPrice - p.minPrice;
+  return (diff * PRECISION) / ((p.maxPrice + p.minPrice) / 2n);
+}
+
+export function getMidPrice(prices: TokenPrices) {
+  return (prices.minPrice + prices.maxPrice) / 2n;
+}
+
+// calculates the minimum amount of native currency that should be left to be used as gas fees
+export function getMinResidualAmount(decimals?: number, price?: bigint) {
+  if (!decimals || price === undefined) {
+    return 0n;
+  }
+
+  const MIN_NATIVE_CURRENCY_FOR_GAS = expandDecimals(10, USD_DECIMALS);
+  return convertToTokenAmount(MIN_NATIVE_CURRENCY_FOR_GAS, decimals, price);
+}
+
+const BLACKLISTED_REGEX = /Wrapped|\(Wormhole\)|\(LayerZero\)/gim;
+export function stripBlacklistedWords(name: string): string {
+  return name.replace(BLACKLISTED_REGEX, "").trim();
 }

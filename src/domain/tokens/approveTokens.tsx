@@ -1,43 +1,54 @@
-import { ethers } from "ethers";
-import Token from "abis/Token.json";
-import { getExplorerUrl } from "config/chains";
+import { Trans, t } from "@lingui/macro";
+import { Signer, ethers } from "ethers";
+import { Link } from "react-router-dom";
+
+import { getChainName, getExplorerUrl } from "config/chains";
+import { getNativeToken } from "sdk/configs/tokens";
 import { helperToast } from "lib/helperToast";
-import { InfoTokens, TokenInfo } from "./types";
-import { Web3Provider } from "@ethersproject/providers";
+import { InfoTokens, TokenInfo } from "sdk/types/tokens";
+
 import ExternalLink from "components/ExternalLink/ExternalLink";
-import { t, Trans } from "@lingui/macro";
+import { ToastifyDebug } from "components/ToastifyDebug/ToastifyDebug";
+
+import Token from "sdk/abis/Token.json";
 
 type Params = {
   setIsApproving: (val: boolean) => void;
-  library: Web3Provider;
+  signer: Signer | undefined;
   tokenAddress: string;
   spender: string;
   chainId: number;
-  onApproveSubmitted: () => void;
+  onApproveSubmitted?: () => void;
+  onApproveFail?: (error: Error) => void;
   getTokenInfo?: (infoTokens: InfoTokens, tokenAddress: string) => TokenInfo;
-  infoTokens: InfoTokens;
-  pendingTxns: any[];
-  setPendingTxns: (txns: any[]) => void;
+  infoTokens?: InfoTokens;
+  pendingTxns?: any[];
+  setPendingTxns?: (txns: any[]) => void;
   includeMessage?: boolean;
+  approveAmount?: bigint;
 };
 
 export function approveTokens({
   setIsApproving,
-  library,
+  signer,
   tokenAddress,
   spender,
   chainId,
   onApproveSubmitted,
+  onApproveFail,
   getTokenInfo,
   infoTokens,
   pendingTxns,
   setPendingTxns,
   includeMessage,
+  approveAmount,
 }: Params) {
   setIsApproving(true);
-  const contract = new ethers.Contract(tokenAddress, Token.abi, library.getSigner());
+  const contract = new ethers.Contract(tokenAddress, Token.abi, signer);
+  const nativeToken = getNativeToken(chainId);
+  const networkName = getChainName(chainId);
   contract
-    .approve(spender, ethers.constants.MaxUint256)
+    .approve(spender, approveAmount ?? ethers.MaxUint256)
     .then(async (res) => {
       const txUrl = getExplorerUrl(chainId) + "tx/" + res.hash;
       helperToast.success(
@@ -61,6 +72,7 @@ export function approveTokens({
       }
     })
     .catch((e) => {
+      onApproveFail?.(e);
       // eslint-disable-next-line no-console
       console.error(e);
       let failMsg;
@@ -72,17 +84,26 @@ export function approveTokens({
         failMsg = (
           <div>
             <Trans>
-              There is not enough ETH in your account on Arbitrum to send this transaction.
+              There is not enough {nativeToken.symbol} in your account on {networkName} to send this transaction.
               <br />
               <br />
-              <ExternalLink href="https://arbitrum.io/bridge-tutorial/">Bridge ETH to Arbitrum</ExternalLink>
+              <Link to="/buy_gmx#bridge">
+                Buy or Transfer {nativeToken.symbol} to {networkName}
+              </Link>
             </Trans>
           </div>
         );
       } else if (e.message?.includes("User denied transaction signature")) {
         failMsg = t`Approval was cancelled`;
       } else {
-        failMsg = t`Approval failed`;
+        failMsg = (
+          <>
+            <Trans>Approval failed</Trans>
+            <br />
+            <br />
+            <ToastifyDebug error={String(e)} />
+          </>
+        );
       }
       helperToast.error(failMsg);
     })

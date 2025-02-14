@@ -1,27 +1,45 @@
-import { FiX } from "react-icons/fi";
-import logoImg from "img/logo_GMX.svg";
 import { t } from "@lingui/macro";
+import logoImg from "img/logo_GMX.svg";
+import { FiX } from "react-icons/fi";
 
-import "./Header.css";
-import { Link } from "react-router-dom";
 import ExternalLink from "components/ExternalLink/ExternalLink";
+import { userAnalytics } from "lib/userAnalytics";
+import { LandingPageLaunchAppEvent } from "lib/userAnalytics/types";
+import { Link } from "react-router-dom";
+import "./Header.scss";
 import { HeaderLink } from "./HeaderLink";
+import { useRedirectPopupTimestamp } from "lib/useRedirectPopupTimestamp";
+import { shouldShowRedirectModal } from "lib/legacy";
 
 type Props = {
   small?: boolean;
   clickCloseIcon?: () => void;
-  redirectPopupTimestamp: number;
   showRedirectModal: (to: string) => void;
 };
 
-type HomeLink = { label: string; link: string; isHomeLink?: boolean | false };
+type HomeLink = { label: string; link: string; isHomeLink?: boolean | false; onClick?: () => void };
 
-export function HomeHeaderLinks({ small, clickCloseIcon, redirectPopupTimestamp, showRedirectModal }: Props) {
+export function HomeHeaderLinks({ small, clickCloseIcon, showRedirectModal }: Props) {
+  const [redirectPopupTimestamp] = useRedirectPopupTimestamp();
+
   const HOME_MENUS: HomeLink[] = [
     {
       label: t`App`,
       isHomeLink: true,
-      link: "/trade",
+      link: `/trade?${userAnalytics.getSessionIdUrlParams()}`,
+      onClick: async () => {
+        await userAnalytics.pushEvent<LandingPageLaunchAppEvent>(
+          {
+            event: "LandingPageAction",
+            data: {
+              action: "LaunchApp",
+              buttonPosition: "MenuButton",
+              shouldSeeConfirmationDialog: shouldShowRedirectModal(redirectPopupTimestamp),
+            },
+          },
+          { instantSend: true }
+        );
+      },
     },
     {
       label: t`Protocol`,
@@ -37,7 +55,7 @@ export function HomeHeaderLinks({ small, clickCloseIcon, redirectPopupTimestamp,
     },
     {
       label: t`Docs`,
-      link: "https://gmxio.gitbook.io/gmx/",
+      link: "https://docs.gmx.io/",
     },
   ];
   return (
@@ -55,15 +73,11 @@ export function HomeHeaderLinks({ small, clickCloseIcon, redirectPopupTimestamp,
           </div>
         </div>
       )}
-      {HOME_MENUS.map(({ link, label, isHomeLink = false }) => {
+      {HOME_MENUS.map(({ link, label, isHomeLink = false, onClick }) => {
         return (
           <div key={label} className="App-header-link-container">
             {isHomeLink ? (
-              <HeaderLink
-                to={link}
-                redirectPopupTimestamp={redirectPopupTimestamp}
-                showRedirectModal={showRedirectModal}
-              >
+              <HeaderLink onClick={onClick} to={link} showRedirectModal={showRedirectModal}>
                 {label}
               </HeaderLink>
             ) : (

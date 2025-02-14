@@ -1,12 +1,15 @@
-import { BigNumber, Contract } from "ethers";
-import { helperToast } from "../helperToast";
-import { ToastifyDebug } from "components/ToastifyDebug/ToastifyDebug";
-import { extractError, NETWORK_CHANGED, NOT_ENOUGH_FUNDS, RPC_ERROR, SLIPPAGE, USER_DENIED } from "./transactionErrors";
-import { getGasLimit, setGasPrice } from "./utils";
-import { getChainName, getExplorerUrl } from "config/chains";
-import { switchNetwork } from "lib/wallets";
-import { t, Trans } from "@lingui/macro";
+import { Trans, t } from "@lingui/macro";
 import ExternalLink from "components/ExternalLink/ExternalLink";
+import { getExplorerUrl } from "config/chains";
+import { PendingTransactionData } from "context/PendingTxnsContext/PendingTxnsContext";
+import { Contract, Overrides, Wallet } from "ethers";
+import { OrderMetricId } from "lib/metrics/types";
+import { sendOrderTxnSubmittedMetric } from "lib/metrics/utils";
+import { getTenderlyConfig, simulateTxWithTenderly } from "lib/tenderly";
+import React, { ReactNode } from "react";
+import { helperToast } from "../helperToast";
+import { getErrorMessage, makeTransactionErrorHandler } from "./transactionErrors";
+import { GasPriceData, getBestNonce, getGasLimit, getGasPrice } from "./utils";
 
 export async function callContract(
   chainId: number,
@@ -14,16 +17,29 @@ export async function callContract(
   method: string,
   params: any,
   opts: {
-    value?: BigNumber | number;
-    gasLimit?: BigNumber | number;
+    value?: bigint | number;
+    gasLimit?: bigint | number;
+    gasPriceData?: GasPriceData;
+    detailsMsg?: ReactNode;
     sentMsg?: string;
     successMsg?: string;
+    successDetailsMsg?: ReactNode;
+    hideSentMsg?: boolean;
     hideSuccessMsg?: boolean;
+    showPreliminaryMsg?: boolean;
     failMsg?: string;
+    customSigners?: Wallet[];
+    customSignersGasLimits?: (bigint | number)[];
+    customSignersGasPrices?: GasPriceData[];
+    bestNonce?: number;
     setPendingTxns?: (txns: any) => void;
+    pendingTransactionData?: PendingTransactionData;
+    metricId?: OrderMetricId;
   }
 ) {
   try {
+    const wallet = contract.runner as Wallet;
+
     if (!Array.isArray(params) && typeof params === "object" && opts === undefined) {
       opts = params;
       params = [];
@@ -33,106 +49,153 @@ export async function callContract(
       opts = {};
     }
 
-    const txnOpts: any = {};
+    const tenderlyConfig = getTenderlyConfig();
+
+    if (tenderlyConfig) {
+      await simulateTxWithTenderly(chainId, contract, wallet.address, method, params, {
+        gasLimit: opts.gasLimit !== undefined ? BigInt(opts.gasLimit) : undefined,
+        value: opts.value !== undefined ? BigInt(opts.value) : undefined,
+        comment: `calling ${method}`,
+      });
+      return;
+    }
+
+    const txnOpts: Overrides = {};
 
     if (opts.value) {
       txnOpts.value = opts.value;
     }
 
-    txnOpts.gasLimit = opts.gasLimit ? opts.gasLimit : await getGasLimit(contract, method, params, opts.value);
+    if (opts.bestNonce) {
+      txnOpts.nonce = opts.bestNonce;
+    } else if (opts.customSigners) {
+      // If we send the transaction to multiple RPCs simultaneously,
+      // we should specify a fixed nonce to avoid possible txn duplication.
+      txnOpts.nonce = await getBestNonce([wallet, ...opts.customSigners]);
+    }
 
-    await setGasPrice(txnOpts, contract.provider, chainId);
+    if (opts.showPreliminaryMsg && !opts.hideSentMsg) {
+      showCallContractToast({
+        chainId,
+        sentMsg: opts.sentMsg || t`Transaction sent.`,
+        detailsMsg: opts.detailsMsg || "",
+      });
+    }
 
-    const res = await contract[method](...params, txnOpts);
-    const txUrl = getExplorerUrl(chainId) + "tx/" + res.hash;
-    const sentMsg = opts.sentMsg || t`Transaction sent.`;
+    const customSignerContracts = opts.customSigners?.map((signer) => contract.connect(signer)) || [];
 
-    helperToast.success(
-      <div>
-        {sentMsg}{" "}
-        <ExternalLink href={txUrl}>
-          <Trans>View status.</Trans>
-        </ExternalLink>
-        <br />
-      </div>
-    );
+    const customGasLimits = [opts.gasLimit].concat(opts.customSignersGasLimits || []);
+    const customGasPrices = [opts.gasPriceData].concat(opts.customSignersGasPrices || []);
+
+    const txnCalls = [contract, ...customSignerContracts].map(async (cntrct, i) => {
+      const txnInstance = { ...txnOpts };
+
+      if (!cntrct.runner?.provider) {
+        throw new Error("No provider found on contract.");
+      }
+
+      async function retrieveGasLimit() {
+        return customGasLimits[i] !== undefined
+          ? (customGasLimits[i] as bigint | number)
+          : await getGasLimit(cntrct, method, params, opts.value);
+      }
+
+      async function retrieveGasPrice() {
+        return customGasPrices[i] !== undefined
+          ? (customGasPrices[i] as GasPriceData)
+          : await getGasPrice(cntrct.runner!.provider!, chainId);
+      }
+
+      const gasLimitPromise = retrieveGasLimit().then((gasLimit) => {
+        txnInstance.gasLimit = gasLimit;
+      });
+
+      const gasPriceDataPromise = retrieveGasPrice().then((gasPriceData) => {
+        if ("gasPrice" in gasPriceData) {
+          txnInstance.gasPrice = gasPriceData.gasPrice;
+        } else {
+          txnInstance.maxFeePerGas = gasPriceData.maxFeePerGas;
+          txnInstance.maxPriorityFeePerGas = gasPriceData.maxPriorityFeePerGas;
+        }
+      });
+
+      await Promise.all([gasLimitPromise, gasPriceDataPromise]);
+
+      if (opts.metricId) {
+        sendOrderTxnSubmittedMetric(opts.metricId);
+      }
+
+      return cntrct[method](...params, txnInstance).catch(
+        makeTransactionErrorHandler(chainId, cntrct, method, params, txnInstance, wallet.address)
+      );
+    });
+
+    const res = await Promise.any(txnCalls).catch(({ errors }) => {
+      if (errors.length > 1) {
+        // eslint-disable-next-line no-console
+        console.error("All transactions failed", ...errors);
+      }
+
+      throw errors[0];
+    });
+
+    if (!opts.hideSentMsg) {
+      showCallContractToast({
+        chainId,
+        sentMsg: opts.sentMsg || t`Transaction sent.`,
+        detailsMsg: opts.detailsMsg || "",
+        hash: res.hash,
+      });
+    }
 
     if (opts.setPendingTxns) {
       const message = opts.hideSuccessMsg ? undefined : opts.successMsg || t`Transaction completed!`;
       const pendingTxn = {
         hash: res.hash,
         message,
+        messageDetails: opts.successDetailsMsg ?? opts.detailsMsg,
+        metricId: opts.metricId,
+        data: opts.pendingTransactionData,
       };
       opts.setPendingTxns((pendingTxns) => [...pendingTxns, pendingTxn]);
     }
 
     return res;
   } catch (e) {
-    let failMsg;
-
-    let autoCloseToast: number | boolean = 5000;
-
-    const [message, type, errorData] = extractError(e);
-    switch (type) {
-      case NOT_ENOUGH_FUNDS:
-        failMsg = (
-          <Trans>
-            There is not enough ETH in your account on Arbitrum to send this transaction.
-            <br />
-            <br />
-            <ExternalLink href="https://arbitrum.io/bridge-tutorial/">Bridge ETH to Arbitrum</ExternalLink>
-          </Trans>
-        );
-        break;
-      case NETWORK_CHANGED:
-        failMsg = (
-          <Trans>
-            <div>Your wallet is not connected to {getChainName(chainId)}.</div>
-            <br />
-            <div className="clickable underline" onClick={() => switchNetwork(chainId, true)}>
-              Switch to {getChainName(chainId)}
-            </div>
-          </Trans>
-        );
-        break;
-      case USER_DENIED:
-        failMsg = t`Transaction was cancelled.`;
-        break;
-      case SLIPPAGE:
-        failMsg = t`The mark price has changed, consider increasing your Allowed Slippage by clicking on the "..." icon next to your address.`;
-        break;
-      case RPC_ERROR:
-        autoCloseToast = false;
-
-        const originalError = errorData?.error?.message || errorData?.message || message;
-
-        failMsg = (
-          <div>
-            <Trans>
-              Transaction failed due to RPC error.
-              <br />
-              <br />
-              Please try changing the RPC url in your wallet settings.{" "}
-              <ExternalLink href="https://gmxio.gitbook.io/gmx/trading#backup-rpc-urls">More info</ExternalLink>
-            </Trans>
-            <br />
-            {originalError && <ToastifyDebug>{originalError}</ToastifyDebug>}
-          </div>
-        );
-        break;
-      default:
-        autoCloseToast = false;
-
-        failMsg = (
-          <div>
-            {opts.failMsg || t`Transaction failed`}
-            <br />
-            {message && <ToastifyDebug>{message}</ToastifyDebug>}
-          </div>
-        );
-    }
+    const { failMsg, autoCloseToast } = getErrorMessage(chainId, e, opts?.failMsg);
 
     helperToast.error(failMsg, { autoClose: autoCloseToast });
     throw e;
   }
+}
+
+function showCallContractToast({
+  chainId,
+  hash,
+  sentMsg,
+  detailsMsg,
+  toastId,
+}: {
+  chainId: number;
+  hash?: string;
+  sentMsg: string;
+  detailsMsg?: React.ReactNode;
+  toastId?: string;
+}) {
+  helperToast.success(
+    <div>
+      {sentMsg || t`Transaction sent.`}{" "}
+      {hash && (
+        <ExternalLink href={getExplorerUrl(chainId) + "tx/" + hash}>
+          <Trans>View status.</Trans>
+        </ExternalLink>
+      )}
+      <br />
+      {detailsMsg && <br />}
+      {detailsMsg}
+    </div>,
+    {
+      toastId,
+    }
+  );
 }

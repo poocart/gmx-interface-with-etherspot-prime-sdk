@@ -5,8 +5,8 @@ type SelectProps = {
   onChange: (evt: ChangeEvent<HTMLSelectElement>) => void;
   value: string | number;
   options: {
-    value: string;
-    label: string;
+    value: string | number;
+    label: string | number;
   }[];
 };
 
@@ -15,7 +15,11 @@ export default function Select(props: SelectProps) {
   return (
     <select className="Select" {...htmlProps}>
       {options.map((option) => {
-        return <option value={option.value}>{option.label}</option>;
+        return (
+          <option key={`${option.value}${option.label}`} value={option.value}>
+            {option.label}
+          </option>
+        );
       })}
     </select>
   );

@@ -1,15 +1,12 @@
-import {
-  isAddressZero,
-  USD_DECIMALS,
-  MAX_REFERRAL_CODE_LENGTH,
-  getTwitterIntentURL,
-  REFERRAL_CODE_QUERY_PARAM,
-} from "lib/legacy";
-import { encodeReferralCode, getReferralCodeOwner } from "domain/referrals";
-import { ARBITRUM, AVALANCHE } from "config/chains";
-import { bigNumberify, formatAmount } from "lib/numbers";
 import { t } from "@lingui/macro";
+import { ARBITRUM, AVALANCHE } from "config/chains";
+import { BASIS_POINTS_DIVISOR_BIGINT, USD_DECIMALS } from "config/factors";
+import { encodeReferralCode } from "sdk/utils/referrals";
+import { bigMath } from "sdk/utils/bigmath";
+import { MAX_REFERRAL_CODE_LENGTH, REFERRAL_CODE_QUERY_PARAM, getTwitterIntentURL, isAddressZero } from "lib/legacy";
+import { deserializeBigIntsInObject, formatAmount, removeTrailingZeros } from "lib/numbers";
 import { getRootUrl } from "lib/url";
+import { getReferralCodeOwner } from "domain/referrals";
 
 export const REFERRAL_CODE_REGEX = /^\w+$/; // only number, string and underscore is allowed
 export const REGEX_VERIFY_BYTES32 = /^0x[0-9a-f]{64}$/;
@@ -69,6 +66,22 @@ export const tierDiscountInfo = {
   2: 10,
 };
 
+export function getSharePercentage(tierId, discountShare, totalRebate, isRebate) {
+  if (tierId === undefined || totalRebate === undefined) return;
+  if (discountShare === undefined || discountShare === 0n)
+    return isRebate ? tierRebateInfo[tierId] : tierDiscountInfo[tierId];
+  const decimals = 4;
+
+  const discount = bigMath.mulDiv(
+    totalRebate * (isRebate ? BASIS_POINTS_DIVISOR_BIGINT - discountShare : discountShare),
+    BigInt(Math.pow(10, decimals)),
+    BASIS_POINTS_DIVISOR_BIGINT
+  );
+
+  const discountPercentage = discount / 100n;
+  return removeTrailingZeros(formatAmount(discountPercentage, decimals, 3, true));
+}
+
 function areObjectsWithSameKeys(obj1, obj2) {
   return Object.keys(obj1).every((key) => key in obj2);
 }
@@ -79,29 +92,31 @@ export function deserializeSampleStats(input) {
   return parsedData
     .map((data) => {
       if (!areObjectsWithSameKeys(getSampleReferrarStat(), data)) return null;
-      return Object.keys(data).reduce((acc, cv) => {
-        const currentValue = data[cv];
-        if (currentValue?.type === "BigNumber") {
-          acc[cv] = bigNumberify(currentValue.hex || 0);
-        } else {
-          acc[cv] = currentValue;
-        }
-        return acc;
-      }, {});
+      return deserializeBigIntsInObject(data);
     })
     .filter(Boolean);
 }
 
 export const getSampleReferrarStat = (code = "", ownerOnOtherNetwork = "", account = "") => {
   return {
-    discountUsd: bigNumberify(0),
+    discountUsd: 0n,
     referralCode: code,
-    totalRebateUsd: bigNumberify(0),
+    totalRebateUsd: 0n,
     tradedReferralsCount: 0,
     registeredReferralsCount: 0,
     trades: 0,
-    volume: bigNumberify(0),
+    volume: 0n,
     time: Date.now(),
+    v1Data: {
+      volume: 0n,
+      totalRebateUsd: 0n,
+      discountUsd: 0n,
+    },
+    v2Data: {
+      volume: 0n,
+      totalRebateUsd: 0n,
+      discountUsd: 0n,
+    },
     ownerOnOtherChain: {
       code: encodeReferralCode(code),
       codeString: code,
@@ -136,7 +151,7 @@ export function getReferralCodeTradeUrl(referralCode) {
 }
 
 export function getTwitterShareUrl(referralCode) {
-  const message = ["Trying out trading on @GMX_IO, up to 50x leverage on $BTC, $ETH 📈", "For fee discounts use:"];
+  const message = ["Trying out trading on @GMX_IO, up to 100x leverage on $BTC, $ETH 📈", "For fee discounts use:"];
   const shareURL = getReferralCodeTradeUrl(referralCode);
 
   return getTwitterIntentURL(message, shareURL);

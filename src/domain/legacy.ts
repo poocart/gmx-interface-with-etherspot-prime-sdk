@@ -1,38 +1,40 @@
-import { BigNumber, ethers } from "ethers";
 import { gql } from "@apollo/client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Token as UniToken } from "@uniswap/sdk-core";
 import { Pool } from "@uniswap/v3-sdk";
+import { ethers } from "ethers";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 
-import OrderBook from "abis/OrderBook.json";
-import PositionManager from "abis/PositionManager.json";
-import Vault from "abis/Vault.json";
-import Router from "abis/Router.json";
-import UniPool from "abis/UniPool.json";
-import UniswapV2 from "abis/UniswapV2.json";
-import Token from "abis/Token.json";
-import PositionRouter from "abis/PositionRouter.json";
+import OrderBook from "sdk/abis/OrderBook.json";
+import PositionManager from "sdk/abis/PositionManager.json";
+import PositionRouter from "sdk/abis/PositionRouter.json";
+import Router from "sdk/abis/Router.json";
+import Token from "sdk/abis/Token.json";
+import UniPool from "sdk/abis/UniPool.json";
+import UniswapV2 from "sdk/abis/UniswapV2.json";
+import Vault from "sdk/abis/Vault.json";
 
+import { ARBITRUM, AVALANCHE, AVALANCHE_FUJI, getChainName, getConstant, getHighExecutionFee } from "config/chains";
 import { getContract } from "config/contracts";
-import { ARBITRUM, ARBITRUM_TESTNET, AVALANCHE, getConstant, getHighExecutionFee } from "config/chains";
-import { DECREASE, getOrderKey, INCREASE, SWAP, USD_DECIMALS } from "lib/legacy";
+import { USD_DECIMALS } from "config/factors";
+import { DECREASE, INCREASE, SWAP, getOrderKey } from "lib/legacy";
 
-import { groupBy } from "lodash";
-import { UI_VERSION } from "config/env";
+import { t } from "@lingui/macro";
 import { getServerBaseUrl, getServerUrl } from "config/backend";
-import { getGmxGraphClient, nissohGraphClient } from "lib/subgraph/clients";
+import { bigMath } from "sdk/utils/bigmath";
 import { callContract, contractFetcher } from "lib/contracts";
+import { BN_ZERO, bigNumberify, expandDecimals, parseValue } from "lib/numbers";
+import { getProvider, useJsonRpcProvider } from "lib/rpc";
+import { getGmxGraphClient, nissohGraphClient } from "lib/subgraph/clients";
+import groupBy from "lodash/groupBy";
+import { getTokenBySymbol } from "sdk/configs/tokens";
+import useSWRInfinite from "swr/infinite";
 import { replaceNativeTokenAddress } from "./tokens";
 import { getUsd } from "./tokens/utils";
-import { getProvider } from "lib/rpc";
-import { bigNumberify, expandDecimals, parseValue } from "lib/numbers";
-import { getTokenBySymbol } from "config/tokens";
-import { t } from "@lingui/macro";
 
 export * from "./prices";
 
-const { AddressZero } = ethers.constants;
+const { ZeroAddress } = ethers;
 
 export function useAllOrdersStats(chainId) {
   const query = gql(`{
@@ -127,7 +129,7 @@ export function useLiquidationsData(chainId, account) {
   return data;
 }
 
-export function useAllPositions(chainId, library) {
+export function useAllPositions(chainId, signer) {
   const count = 1000;
   const query = gql(`{
     aggregatedTradeOpens(
@@ -159,7 +161,7 @@ export function useAllPositions(chainId, library) {
   const key = res ? `allPositions${count}__` : null;
 
   const { data: positions = [] } = useSWR(key, async () => {
-    const provider = getProvider(library, chainId);
+    const provider = getProvider(signer, chainId);
     const vaultAddress = getContract(chainId, "Vault");
     const contract = new ethers.Contract(vaultAddress, Vault.abi, provider);
     const ret = await Promise.all(
@@ -174,12 +176,12 @@ export function useAllPositions(chainId, library) {
             account: dataItem.account,
           };
           position.fundingFee = await contract.getFundingFee(collateralToken, position.size, position.entryFundingRate);
-          position.marginFee = position.size.div(1000);
-          position.fee = position.fundingFee.add(position.marginFee);
+          position.marginFee = position.size / 1000n;
+          position.fee = position.fundingFee + position.marginFee;
 
           const THRESHOLD = 5000;
-          const collateralDiffPercent = position.fee.mul(10000).div(position.collateral);
-          position.danger = collateralDiffPercent.gt(THRESHOLD);
+          const collateralDiffPercent = bigMath.mulDiv(position.fee, 10000n, position.collateral);
+          position.danger = collateralDiffPercent > THRESHOLD;
 
           return position;
         } catch (ex) {
@@ -195,7 +197,7 @@ export function useAllPositions(chainId, library) {
   return positions;
 }
 
-export function useAllOrders(chainId, library) {
+export function useAllOrders(chainId, signer) {
   const query = gql(`{
     orders(
       first: 1000,
@@ -219,7 +221,7 @@ export function useAllOrders(chainId, library) {
 
   const key = res ? res.data.orders.map((order) => `${order.type}-${order.account}-${order.index}`) : null;
   const { data: orders = [] } = useSWR(key, () => {
-    const provider = getProvider(library, chainId);
+    const provider = getProvider(signer, chainId);
     const orderBookAddress = getContract(chainId, "OrderBook");
     const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, provider);
     return Promise.all(
@@ -233,7 +235,7 @@ export function useAllOrders(chainId, library) {
             ret[key] = val;
           }
           if (order.type === "swap") {
-            ret.path = [ret.path0, ret.path1, ret.path2].filter((address) => address !== AddressZero);
+            ret.path = [ret.path0, ret.path1, ret.path2].filter((address) => address !== ZeroAddress);
           }
           ret.type = type;
           ret.index = order.index;
@@ -251,10 +253,10 @@ export function useAllOrders(chainId, library) {
   return orders.filter(Boolean);
 }
 
-export function usePositionsForOrders(chainId, library, orders) {
+export function usePositionsForOrders(chainId, signer, orders) {
   const key = orders ? orders.map((order) => getOrderKey(order) + "____") : null;
   const { data: positions = {} } = useSWR(key, async () => {
-    const provider = getProvider(library, chainId);
+    const provider = getProvider(signer, chainId);
     const vaultAddress = getContract(chainId, "Vault");
     const contract = new ethers.Contract(vaultAddress, Vault.abi, provider);
     const data = await Promise.all(
@@ -266,7 +268,7 @@ export function usePositionsForOrders(chainId, library, orders) {
             order.indexToken,
             order.isLong
           );
-          if (position[0].eq(0)) {
+          if (position[0] == 0n) {
             return [null, order];
           }
           return [position, order];
@@ -291,23 +293,39 @@ function invariant(condition, errorMsg) {
   }
 }
 
-export function useTrades(chainId, account, forSingleAccount, afterId) {
-  let url =
-    account && account.length > 0
-      ? `${getServerBaseUrl(chainId)}/actions?account=${account}`
-      : !forSingleAccount && `${getServerBaseUrl(chainId)}/actions`;
+export function useTrades(chainId, account) {
+  function getFetchUrl(chainId: number, account: string, afterId: string): string {
+    const baseUrl = `${getServerBaseUrl(chainId)}/actions`;
+    const urlItem = new URL(baseUrl);
 
-  if (afterId && afterId.length > 0) {
-    const urlItem = new URL(url as string);
-    urlItem.searchParams.append("after", afterId);
-    url = urlItem.toString();
+    if (account) {
+      urlItem.searchParams.append("account", account);
+    }
+
+    if (afterId) {
+      urlItem.searchParams.append("after", afterId);
+    }
+
+    return urlItem.toString();
   }
 
-  const { data: trades, mutate: updateTrades } = useSWR(url ? url : null, {
+  function getKey(pageIndex: number, previousPageData) {
+    if (previousPageData && !previousPageData.length) return null;
+    const afterId = previousPageData && previousPageData[previousPageData.length - 1].id;
+    return [getFetchUrl(chainId, account, afterId), pageIndex];
+  }
+
+  const {
+    data,
+    mutate: updateTrades,
+    size,
+    setSize,
+  } = useSWRInfinite(getKey, {
     dedupingInterval: 10000,
     // @ts-ignore
-    fetcher: (...args) => fetch(...args).then((res) => res.json()),
+    fetcher: ([url]) => fetch(url).then((res) => res.json()),
   });
+  const trades = data ? data.flat() : undefined;
 
   if (trades) {
     trades.sort((item0, item1) => {
@@ -349,29 +367,31 @@ export function useTrades(chainId, account, forSingleAccount, afterId) {
     });
   }
 
-  return { trades, updateTrades };
+  return { trades, updateTrades, size, setSize };
 }
 
-export function useExecutionFee(library, active, chainId, infoTokens) {
+export function useExecutionFee(active, chainId, infoTokens) {
   const positionRouterAddress = getContract(chainId, "PositionRouter");
   const nativeTokenAddress = getContract(chainId, "NATIVE_TOKEN");
+  let { provider } = useJsonRpcProvider(chainId);
 
-  const { data: minExecutionFee } = useSWR<BigNumber>([active, chainId, positionRouterAddress, "minExecutionFee"], {
-    fetcher: contractFetcher(library, PositionRouter),
+  const { data: minExecutionFee } = useSWR<bigint>([active, chainId, positionRouterAddress, "minExecutionFee"], {
+    fetcher: contractFetcher(provider, PositionRouter) as any,
   });
 
-  const { data: gasPrice } = useSWR<BigNumber | undefined>(["gasPrice", chainId], {
+  const { data: gasPrice } = useSWR<bigint | undefined>(["gasPrice", chainId], {
     fetcher: () => {
-      return new Promise(async (resolve, reject) => {
-        const provider = getProvider(library, chainId);
+      return new Promise<bigint | undefined>(async (resolve) => {
         if (!provider) {
-          resolve(undefined);
-          return;
+          // eslint-disable-next-line no-console
+          console.warn("provider is undefined, falling back to getProvider(undefined, chainId)");
+
+          provider = getProvider(undefined, chainId);
         }
 
         try {
-          const gasPrice = await provider.getGasPrice();
-          resolve(gasPrice);
+          const gasPrice = (await provider.getFeeData()).gasPrice;
+          resolve(gasPrice ?? undefined);
         } catch (e) {
           // eslint-disable-next-line no-console
           console.error(e);
@@ -380,31 +400,35 @@ export function useExecutionFee(library, active, chainId, infoTokens) {
     },
   });
 
-  let multiplier;
+  let multiplier = 0n;
 
-  if (chainId === ARBITRUM || chainId === ARBITRUM_TESTNET) {
-    multiplier = 2150000;
+  if (chainId === ARBITRUM) {
+    multiplier = 2150000n;
   }
 
   // multiplier for Avalanche is just the average gas usage
-  if (chainId === AVALANCHE) {
-    multiplier = 700000;
+  if (chainId === AVALANCHE || chainId === AVALANCHE_FUJI) {
+    multiplier = 700000n;
   }
 
   let finalExecutionFee = minExecutionFee;
 
-  if (gasPrice && minExecutionFee) {
-    const estimatedExecutionFee = gasPrice.mul(multiplier);
-    if (estimatedExecutionFee.gt(minExecutionFee)) {
+  if (gasPrice !== undefined && minExecutionFee !== undefined) {
+    const estimatedExecutionFee = gasPrice * multiplier;
+    if (estimatedExecutionFee > minExecutionFee) {
       finalExecutionFee = estimatedExecutionFee;
     }
   }
 
   const finalExecutionFeeUSD = getUsd(finalExecutionFee, nativeTokenAddress, false, infoTokens);
-  const isFeeHigh = finalExecutionFeeUSD?.gt(expandDecimals(getHighExecutionFee(chainId), USD_DECIMALS));
+  const isFeeHigh =
+    finalExecutionFeeUSD !== undefined &&
+    finalExecutionFeeUSD > expandDecimals(getHighExecutionFee(chainId), USD_DECIMALS);
   const errorMessage =
     isFeeHigh &&
-    `The network cost to send transactions is high at the moment, please check the "Execution Fee" value before proceeding.`;
+    t`The network Fees are very high currently, which may be due to a temporary increase in transactions on the ${getChainName(
+      chainId
+    )} network.`;
 
   return {
     minExecutionFee: finalExecutionFee,
@@ -413,14 +437,14 @@ export function useExecutionFee(library, active, chainId, infoTokens) {
   };
 }
 
-export function useStakedGmxSupply(library, active) {
+export function useStakedGmxSupply(signer, active) {
   const gmxAddressArb = getContract(ARBITRUM, "GMX");
   const stakedGmxTrackerAddressArb = getContract(ARBITRUM, "StakedGmxTracker");
 
   const { data: arbData, mutate: arbMutate } = useSWR<any>(
     [`StakeV2:stakedGmxSupply:${active}`, ARBITRUM, gmxAddressArb, "balanceOf", stakedGmxTrackerAddressArb],
     {
-      fetcher: contractFetcher(library, Token),
+      fetcher: contractFetcher(signer, Token),
     }
   );
 
@@ -436,7 +460,7 @@ export function useStakedGmxSupply(library, active) {
 
   let data;
   if (arbData && avaxData) {
-    data = arbData.add(avaxData);
+    data = arbData + avaxData;
   }
 
   const mutate = () => {
@@ -447,28 +471,12 @@ export function useStakedGmxSupply(library, active) {
   return { data, mutate };
 }
 
-export function useHasOutdatedUi() {
-  const url = getServerUrl(ARBITRUM, "/ui_version");
-  const { data, mutate } = useSWR([url], {
-    // @ts-ignore
-    fetcher: (...args) => fetch(...args).then((res) => res.text()),
-  });
-
-  let hasOutdatedUi = false;
-
-  if (data && parseFloat(data) > parseFloat(UI_VERSION)) {
-    hasOutdatedUi = true;
-  }
-
-  return { data: hasOutdatedUi, mutate };
-}
-
 export function useGmxPrice(chainId, libraries, active) {
   const arbitrumLibrary = libraries && libraries.arbitrum ? libraries.arbitrum : undefined;
   const { data: gmxPriceFromArbitrum, mutate: mutateFromArbitrum } = useGmxPriceFromArbitrum(arbitrumLibrary, active);
   const { data: gmxPriceFromAvalanche, mutate: mutateFromAvalanche } = useGmxPriceFromAvalanche();
 
-  const gmxPrice = chainId === ARBITRUM ? gmxPriceFromArbitrum : gmxPriceFromAvalanche;
+  const gmxPrice: bigint | undefined = chainId === ARBITRUM ? gmxPriceFromArbitrum : gmxPriceFromAvalanche;
   const mutate = useCallback(() => {
     mutateFromAvalanche();
     mutateFromArbitrum();
@@ -486,9 +494,9 @@ export function useGmxPrice(chainId, libraries, active) {
 export function useTotalGmxSupply() {
   const gmxSupplyUrlArbitrum = getServerUrl(ARBITRUM, "/gmx_supply");
 
-  const { data: gmxSupply, mutate: updateGmxSupply } = useSWR([gmxSupplyUrlArbitrum], {
+  const { data: gmxSupply, mutate: updateGmxSupply } = useSWR(gmxSupplyUrlArbitrum, {
     // @ts-ignore
-    fetcher: (...args) => fetch(...args).then((res) => res.text()),
+    fetcher: (url) => fetch(url).then((res) => res.text()),
   });
 
   return {
@@ -500,8 +508,8 @@ export function useTotalGmxSupply() {
 export function useTotalGmxStaked() {
   const stakedGmxTrackerAddressArbitrum = getContract(ARBITRUM, "StakedGmxTracker");
   const stakedGmxTrackerAddressAvax = getContract(AVALANCHE, "StakedGmxTracker");
-  let totalStakedGmx = useRef(bigNumberify(0));
-  const { data: stakedGmxSupplyArbitrum, mutate: updateStakedGmxSupplyArbitrum } = useSWR<BigNumber>(
+  let totalStakedGmx = useRef(BN_ZERO);
+  const { data: stakedGmxSupplyArbitrum, mutate: updateStakedGmxSupplyArbitrum } = useSWR<bigint>(
     [
       `StakeV2:stakedGmxSupply:${ARBITRUM}`,
       ARBITRUM,
@@ -510,10 +518,10 @@ export function useTotalGmxStaked() {
       stakedGmxTrackerAddressArbitrum,
     ],
     {
-      fetcher: contractFetcher(undefined, Token),
+      fetcher: contractFetcher(undefined, Token) as any,
     }
   );
-  const { data: stakedGmxSupplyAvax, mutate: updateStakedGmxSupplyAvax } = useSWR<BigNumber>(
+  const { data: stakedGmxSupplyAvax, mutate: updateStakedGmxSupplyAvax } = useSWR<bigint>(
     [
       `StakeV2:stakedGmxSupply:${AVALANCHE}`,
       AVALANCHE,
@@ -522,7 +530,7 @@ export function useTotalGmxStaked() {
       stakedGmxTrackerAddressAvax,
     ],
     {
-      fetcher: contractFetcher(undefined, Token),
+      fetcher: contractFetcher(undefined, Token) as any,
     }
   );
 
@@ -531,14 +539,14 @@ export function useTotalGmxStaked() {
     updateStakedGmxSupplyAvax();
   }, [updateStakedGmxSupplyArbitrum, updateStakedGmxSupplyAvax]);
 
-  if (stakedGmxSupplyArbitrum && stakedGmxSupplyAvax) {
-    let total = bigNumberify(stakedGmxSupplyArbitrum)!.add(stakedGmxSupplyAvax);
+  if (stakedGmxSupplyArbitrum != undefined && stakedGmxSupplyAvax != undefined) {
+    let total = BigInt(stakedGmxSupplyArbitrum) + BigInt(stakedGmxSupplyAvax);
     totalStakedGmx.current = total;
   }
 
   return {
-    avax: stakedGmxSupplyAvax,
-    arbitrum: stakedGmxSupplyArbitrum,
+    [AVALANCHE]: stakedGmxSupplyAvax,
+    [ARBITRUM]: stakedGmxSupplyArbitrum,
     total: totalStakedGmx.current,
     mutate,
   };
@@ -547,7 +555,7 @@ export function useTotalGmxStaked() {
 export function useTotalGmxInLiquidity() {
   let poolAddressArbitrum = getContract(ARBITRUM, "UniswapGmxEthPool");
   let poolAddressAvax = getContract(AVALANCHE, "TraderJoeGmxAvaxPool");
-  let totalGMX = useRef(bigNumberify(0));
+  let totalGMX = useRef(BN_ZERO);
 
   const { data: gmxInLiquidityOnArbitrum, mutate: mutateGMXInLiquidityOnArbitrum } = useSWR<any>(
     [`StakeV2:gmxInLiquidity:${ARBITRUM}`, ARBITRUM, getContract(ARBITRUM, "GMX"), "balanceOf", poolAddressArbitrum],
@@ -567,12 +575,12 @@ export function useTotalGmxInLiquidity() {
   }, [mutateGMXInLiquidityOnArbitrum, mutateGMXInLiquidityOnAvax]);
 
   if (gmxInLiquidityOnAvax && gmxInLiquidityOnArbitrum) {
-    let total = bigNumberify(gmxInLiquidityOnArbitrum)!.add(gmxInLiquidityOnAvax);
+    let total = bigNumberify(gmxInLiquidityOnArbitrum)! + bigNumberify(gmxInLiquidityOnAvax)!;
     totalGMX.current = total;
   }
   return {
-    avax: gmxInLiquidityOnAvax,
-    arbitrum: gmxInLiquidityOnArbitrum,
+    [AVALANCHE]: gmxInLiquidityOnAvax,
+    [ARBITRUM]: gmxInLiquidityOnArbitrum,
     total: totalGMX.current,
     mutate,
   };
@@ -595,10 +603,10 @@ function useGmxPriceFromAvalanche() {
     }
   );
 
-  const PRECISION = bigNumberify(10)!.pow(18);
-  let gmxPrice;
+  const PRECISION = 10n ** 18n;
+  let gmxPrice: bigint | undefined;
   if (avaxReserve && gmxReserve && avaxPrice) {
-    gmxPrice = avaxReserve.mul(PRECISION).div(gmxReserve).mul(avaxPrice).div(PRECISION);
+    gmxPrice = bigMath.mulDiv(bigMath.mulDiv(avaxReserve, PRECISION, gmxReserve), avaxPrice, PRECISION);
   }
 
   const mutate = useCallback(() => {
@@ -609,26 +617,26 @@ function useGmxPriceFromAvalanche() {
   return { data: gmxPrice, mutate };
 }
 
-function useGmxPriceFromArbitrum(library, active) {
+function useGmxPriceFromArbitrum(signer, active) {
   const poolAddress = getContract(ARBITRUM, "UniswapGmxEthPool");
   const { data: uniPoolSlot0, mutate: updateUniPoolSlot0 } = useSWR<any>(
     [`StakeV2:uniPoolSlot0:${active}`, ARBITRUM, poolAddress, "slot0"],
     {
-      fetcher: contractFetcher(library, UniPool),
+      fetcher: contractFetcher(signer, UniPool),
     }
   );
 
   const vaultAddress = getContract(ARBITRUM, "Vault");
   const ethAddress = getTokenBySymbol(ARBITRUM, "WETH").address;
-  const { data: ethPrice, mutate: updateEthPrice } = useSWR<BigNumber>(
+  const { data: ethPrice, mutate: updateEthPrice } = useSWR<bigint>(
     [`StakeV2:ethPrice:${active}`, ARBITRUM, vaultAddress, "getMinPrice", ethAddress],
     {
-      fetcher: contractFetcher(library, Vault),
+      fetcher: contractFetcher(signer, Vault) as any,
     }
   );
 
   const gmxPrice = useMemo(() => {
-    if (uniPoolSlot0 && ethPrice) {
+    if (uniPoolSlot0 != undefined && ethPrice != undefined) {
       const tokenA = new UniToken(ARBITRUM, ethAddress, 18, "SYMBOL", "NAME");
 
       const gmxAddress = getContract(ARBITRUM, "GMX");
@@ -638,15 +646,17 @@ function useGmxPriceFromArbitrum(library, active) {
         tokenA, // tokenA
         tokenB, // tokenB
         10000, // fee
-        uniPoolSlot0.sqrtPriceX96, // sqrtRatioX96
+        uniPoolSlot0.sqrtPriceX96.toString(), // sqrtRatioX96
         1, // liquidity
-        uniPoolSlot0.tick, // tickCurrent
+        Number(uniPoolSlot0.tick), // tickCurrent
         []
       );
 
       const poolTokenPrice = pool.priceOf(tokenB).toSignificant(6);
       const poolTokenPriceAmount = parseValue(poolTokenPrice, 18);
-      return poolTokenPriceAmount?.mul(ethPrice).div(expandDecimals(1, 18));
+      return poolTokenPriceAmount === undefined
+        ? undefined
+        : bigMath.mulDiv(poolTokenPriceAmount, ethPrice, expandDecimals(1, 18));
     }
   }, [ethPrice, uniPoolSlot0, ethAddress]);
 
@@ -658,9 +668,9 @@ function useGmxPriceFromArbitrum(library, active) {
   return { data: gmxPrice, mutate };
 }
 
-export async function approvePlugin(chainId, pluginAddress, { library, setPendingTxns, sentMsg, failMsg }) {
+export async function approvePlugin(chainId, pluginAddress, { signer, setPendingTxns, sentMsg, failMsg }) {
   const routerAddress = getContract(chainId, "Router");
-  const contract = new ethers.Contract(routerAddress, Router.abi, library.getSigner());
+  const contract = new ethers.Contract(routerAddress, Router.abi, signer);
   return callContract(chainId, contract, "approvePlugin", [pluginAddress], {
     sentMsg,
     failMsg,
@@ -670,7 +680,7 @@ export async function approvePlugin(chainId, pluginAddress, { library, setPendin
 
 export async function createSwapOrder(
   chainId,
-  library,
+  signer,
   path,
   amountIn,
   minOut,
@@ -684,11 +694,11 @@ export async function createSwapOrder(
   let shouldUnwrap = false;
   opts.value = executionFee;
 
-  if (path[0] === AddressZero) {
+  if (path[0] === ZeroAddress) {
     shouldWrap = true;
-    opts.value = opts.value.add(amountIn);
+    opts.value = opts.value + amountIn;
   }
-  if (path[path.length - 1] === AddressZero) {
+  if (path[path.length - 1] === ZeroAddress) {
     shouldUnwrap = true;
   }
   path = replaceNativeTokenAddress(path, nativeTokenAddress);
@@ -696,14 +706,14 @@ export async function createSwapOrder(
   const params = [path, amountIn, minOut, triggerRatio, triggerAboveThreshold, executionFee, shouldWrap, shouldUnwrap];
 
   const orderBookAddress = getContract(chainId, "OrderBook");
-  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, library.getSigner());
+  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, signer);
 
   return callContract(chainId, contract, "createSwapOrder", params, opts);
 }
 
 export async function createIncreaseOrder(
   chainId,
-  library,
+  signer,
   nativeTokenAddress,
   path,
   amountIn,
@@ -716,10 +726,10 @@ export async function createIncreaseOrder(
   opts: any = {}
 ) {
   invariant(!isLong || indexTokenAddress === collateralTokenAddress, "invalid token addresses");
-  invariant(indexTokenAddress !== AddressZero, "indexToken is 0");
-  invariant(collateralTokenAddress !== AddressZero, "collateralToken is 0");
+  invariant(indexTokenAddress !== ZeroAddress, "indexToken is 0");
+  invariant(collateralTokenAddress !== ZeroAddress, "collateralToken is 0");
 
-  const fromETH = path[0] === AddressZero;
+  const fromETH = path[0] === ZeroAddress;
 
   path = replaceNativeTokenAddress(path, nativeTokenAddress);
   const shouldWrap = fromETH;
@@ -741,18 +751,18 @@ export async function createIncreaseOrder(
   ];
 
   if (!opts.value) {
-    opts.value = fromETH ? amountIn.add(executionFee) : executionFee;
+    opts.value = fromETH ? amountIn + executionFee : executionFee;
   }
 
   const orderBookAddress = getContract(chainId, "OrderBook");
-  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, library.getSigner());
+  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, signer);
 
   return callContract(chainId, contract, "createIncreaseOrder", params, opts);
 }
 
 export async function createDecreaseOrder(
   chainId,
-  library,
+  signer,
   indexTokenAddress,
   sizeDelta,
   collateralTokenAddress,
@@ -763,8 +773,8 @@ export async function createDecreaseOrder(
   opts: any = {}
 ) {
   invariant(!isLong || indexTokenAddress === collateralTokenAddress, "invalid token addresses");
-  invariant(indexTokenAddress !== AddressZero, "indexToken is 0");
-  invariant(collateralTokenAddress !== AddressZero, "collateralToken is 0");
+  invariant(indexTokenAddress !== ZeroAddress, "indexToken is 0");
+  invariant(collateralTokenAddress !== ZeroAddress, "collateralToken is 0");
 
   const executionFee = getConstant(chainId, "DECREASE_ORDER_EXECUTION_GAS_FEE");
 
@@ -779,39 +789,39 @@ export async function createDecreaseOrder(
   ];
   opts.value = executionFee;
   const orderBookAddress = getContract(chainId, "OrderBook");
-  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, library.getSigner());
+  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, signer);
 
   return callContract(chainId, contract, "createDecreaseOrder", params, opts);
 }
 
-export async function cancelSwapOrder(chainId, library, index, opts) {
+export async function cancelSwapOrder(chainId, signer, index, opts) {
   const params = [index];
   const method = "cancelSwapOrder";
   const orderBookAddress = getContract(chainId, "OrderBook");
-  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, library.getSigner());
+  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, signer);
 
   return callContract(chainId, contract, method, params, opts);
 }
 
-export async function cancelDecreaseOrder(chainId, library, index, opts) {
+export async function cancelDecreaseOrder(chainId, signer, index, opts) {
   const params = [index];
   const method = "cancelDecreaseOrder";
   const orderBookAddress = getContract(chainId, "OrderBook");
-  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, library.getSigner());
+  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, signer);
 
   return callContract(chainId, contract, method, params, opts);
 }
 
-export async function cancelIncreaseOrder(chainId, library, index, opts) {
+export async function cancelIncreaseOrder(chainId, signer, index, opts) {
   const params = [index];
   const method = "cancelIncreaseOrder";
   const orderBookAddress = getContract(chainId, "OrderBook");
-  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, library.getSigner());
+  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, signer);
 
   return callContract(chainId, contract, method, params, opts);
 }
 
-export function handleCancelOrder(chainId, library, order, opts) {
+export function handleCancelOrder(chainId, signer, order, opts) {
   let func;
   if (order.type === SWAP) {
     func = cancelSwapOrder;
@@ -821,7 +831,7 @@ export function handleCancelOrder(chainId, library, order, opts) {
     func = cancelDecreaseOrder;
   }
 
-  return func(chainId, library, order.index, {
+  return func(chainId, signer, order.index, {
     successMsg: t`Order cancelled.`,
     failMsg: t`Cancel failed.`,
     sentMsg: t`Cancel submitted.`,
@@ -830,7 +840,7 @@ export function handleCancelOrder(chainId, library, order, opts) {
   });
 }
 
-export async function cancelMultipleOrders(chainId, library, allIndexes = [], opts) {
+export async function cancelMultipleOrders(chainId, signer, allIndexes: any[] = [], opts) {
   const ordersWithTypes = groupBy(allIndexes, (v) => v.split("-")[0]);
   function getIndexes(key) {
     if (!ordersWithTypes[key]) return;
@@ -840,13 +850,13 @@ export async function cancelMultipleOrders(chainId, library, allIndexes = [], op
   const params = ["Swap", "Increase", "Decrease"].map((key) => getIndexes(key) || []);
   const method = "cancelMultiple";
   const orderBookAddress = getContract(chainId, "OrderBook");
-  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, library.getSigner());
+  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, signer);
   return callContract(chainId, contract, method, params, opts);
 }
 
 export async function updateDecreaseOrder(
   chainId,
-  library,
+  signer,
   index,
   collateralDelta,
   sizeDelta,
@@ -857,14 +867,14 @@ export async function updateDecreaseOrder(
   const params = [index, collateralDelta, sizeDelta, triggerPrice, triggerAboveThreshold];
   const method = "updateDecreaseOrder";
   const orderBookAddress = getContract(chainId, "OrderBook");
-  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, library.getSigner());
+  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, signer);
 
   return callContract(chainId, contract, method, params, opts);
 }
 
 export async function updateIncreaseOrder(
   chainId,
-  library,
+  signer,
   index,
   sizeDelta,
   triggerPrice,
@@ -874,35 +884,35 @@ export async function updateIncreaseOrder(
   const params = [index, sizeDelta, triggerPrice, triggerAboveThreshold];
   const method = "updateIncreaseOrder";
   const orderBookAddress = getContract(chainId, "OrderBook");
-  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, library.getSigner());
+  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, signer);
 
   return callContract(chainId, contract, method, params, opts);
 }
 
-export async function updateSwapOrder(chainId, library, index, minOut, triggerRatio, triggerAboveThreshold, opts) {
+export async function updateSwapOrder(chainId, signer, index, minOut, triggerRatio, triggerAboveThreshold, opts) {
   const params = [index, minOut, triggerRatio, triggerAboveThreshold];
   const method = "updateSwapOrder";
   const orderBookAddress = getContract(chainId, "OrderBook");
-  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, library.getSigner());
+  const contract = new ethers.Contract(orderBookAddress, OrderBook.abi, signer);
 
   return callContract(chainId, contract, method, params, opts);
 }
 
-export async function _executeOrder(chainId, library, method, account, index, feeReceiver, opts) {
+export async function _executeOrder(chainId, signer, method, account, index, feeReceiver, opts) {
   const params = [account, index, feeReceiver];
   const positionManagerAddress = getContract(chainId, "PositionManager");
-  const contract = new ethers.Contract(positionManagerAddress, PositionManager.abi, library.getSigner());
+  const contract = new ethers.Contract(positionManagerAddress, PositionManager.abi, signer);
   return callContract(chainId, contract, method, params, opts);
 }
 
-export function executeSwapOrder(chainId, library, account, index, feeReceiver, opts) {
-  return _executeOrder(chainId, library, "executeSwapOrder", account, index, feeReceiver, opts);
+export function executeSwapOrder(chainId, signer, account, index, feeReceiver, opts) {
+  return _executeOrder(chainId, signer, "executeSwapOrder", account, index, feeReceiver, opts);
 }
 
-export function executeIncreaseOrder(chainId, library, account, index, feeReceiver, opts) {
-  return _executeOrder(chainId, library, "executeIncreaseOrder", account, index, feeReceiver, opts);
+export function executeIncreaseOrder(chainId, signer, account, index, feeReceiver, opts) {
+  return _executeOrder(chainId, signer, "executeIncreaseOrder", account, index, feeReceiver, opts);
 }
 
-export function executeDecreaseOrder(chainId, library, account, index, feeReceiver, opts) {
-  return _executeOrder(chainId, library, "executeDecreaseOrder", account, index, feeReceiver, opts);
+export function executeDecreaseOrder(chainId, signer, account, index, feeReceiver, opts) {
+  return _executeOrder(chainId, signer, "executeDecreaseOrder", account, index, feeReceiver, opts);
 }

@@ -1,4 +1,4 @@
-import { ARBITRUM, AVALANCHE } from "config/chains";
+import { ARBITRUM, AVALANCHE, AVALANCHE_FUJI } from "config/chains";
 import { getContract } from "config/contracts";
 
 const ARBITRUM_GMX = getContract(ARBITRUM, "GMX").toLowerCase();
@@ -15,6 +15,7 @@ export const EXTERNAL_LINKS = {
     networkWebsite: "https://arbitrum.io/",
     buyGmx: {
       uniswap: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${ARBITRUM_GMX}`,
+      gmx: `https://app.gmx.io/#/trade/swap/?mode=market&from=usdc&to=gmx`,
     },
   },
   [AVALANCHE]: {
@@ -23,17 +24,15 @@ export const EXTERNAL_LINKS = {
       traderjoe: `https://traderjoexyz.com/trade?outputCurrency=${AVALANCHE_GMX}`,
     },
   },
+  [AVALANCHE_FUJI]: {
+    networkWebsite: "https://www.avax.network/",
+    buyGmx: {
+      traderjoe: `https://traderjoexyz.com/trade?outputCurrency=${AVALANCHE_GMX}`,
+    },
+  },
 };
 
 export const FIAT_GATEWAYS: Exchange[] = [
-  {
-    name: "Binance Connect",
-    icon: "ic_binance.svg",
-    links: {
-      [ARBITRUM]: "https://www.binancecnt.com/en/buy-sell-crypto",
-      [AVALANCHE]: "https://www.binancecnt.com/en/buy-sell-crypto",
-    },
-  },
   {
     name: "Banxa",
     icon: "ic_banxa.svg",
@@ -61,14 +60,6 @@ export const GMX_FROM_ANY_NETWORKS: Exchange[] = [
       [AVALANCHE]: `https://multitx.bungee.exchange/?toChainId=43114&toTokenAddress=${AVALANCHE_GMX}`,
     },
   },
-  {
-    name: "O3",
-    icon: "ic_o3.png",
-    links: {
-      [ARBITRUM]: `https://o3swap.com/swap?dst_chain=42161&dst_token_hash=${ARBITRUM_GMX}`,
-      [AVALANCHE]: `https://o3swap.com/swap?dst_chain=43114&dst_token_hash=${AVALANCHE_GMX}`,
-    },
-  },
 ];
 
 export const BUY_NATIVE_TOKENS: Exchange[] = [
@@ -78,16 +69,6 @@ export const BUY_NATIVE_TOKENS: Exchange[] = [
     links: {
       [ARBITRUM]: `https://multitx.bungee.exchange/?fromChainId=1&fromTokenAddress=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee&toChainId=42161&toTokenAddress=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee `,
       [AVALANCHE]: `https://multitx.bungee.exchange/?fromChainId=1&fromTokenAddress=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee&toChainId=43114&toTokenAddress=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`,
-    },
-  },
-  {
-    name: "O3",
-    icon: "ic_o3.png",
-    links: {
-      [ARBITRUM]:
-        "https://o3swap.com/swap?src_chain=1&dst_chain=42161&dst_token_hash=0x0000000000000000000000000000000000000000",
-      [AVALANCHE]:
-        "https://o3swap.com/swap?src_chain=1&dst_chain=43114&dst_token_hash=0x0000000000000000000000000000000000000000",
     },
   },
   {
@@ -154,24 +135,6 @@ export const TRANSFER_EXCHANGES: Exchange[] = [
         "https://multitx.bungee.exchange/?fromChainId=1&fromTokenAddress=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee&toChainId=42161&toTokenAddress=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       [AVALANCHE]:
         "https://multitx.bungee.exchange/?fromChainId=1&fromTokenAddress=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee&toChainId=43114&toTokenAddress=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    },
-  },
-  {
-    name: "Multichain",
-    icon: "ic_multichain.svg",
-    links: {
-      [ARBITRUM]: "https://app.multichain.org/#/router",
-      [AVALANCHE]: "https://app.multichain.org/#/router",
-    },
-  },
-  {
-    name: "O3",
-    icon: "ic_o3.png",
-    links: {
-      [ARBITRUM]:
-        "https://o3swap.com/swap?src_chain=1&dst_chain=42161&dst_token_hash=0x0000000000000000000000000000000000000000",
-      [AVALANCHE]:
-        "https://o3swap.com/swap?src_chain=1&dst_chain=43114&dst_token_hash=0x0000000000000000000000000000000000000000",
     },
   },
   {

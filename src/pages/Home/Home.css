@@ -1,6 +1,12 @@
 .Home {
   min-height: 100vh;
-  padding-bottom: calc(4.65rem + 20rem);
+  padding-bottom: 15rem;
+}
+
+@media (max-width: 1024px) {
+  .Home {
+    padding-bottom: 23rem;
+  }
 }
 
 .Home-top {
@@ -10,7 +16,6 @@
   justify-content: flex-end;
   padding-top: 6.2rem;
   position: relative;
-  /* height: 52.581rem; */
   padding-bottom: 6.4rem;
   background: url("img/Artwork_gmx.svg");
   background-repeat: no-repeat;
@@ -46,12 +51,12 @@
   font-size: 2rem;
   line-height: 2.5rem;
   max-width: 44.4rem;
-  color: #a0a3c4;
+  color: var(--color-slate-100);
   margin-bottom: 2.8rem;
 }
 
 .Home-benefits-section {
-  background: #17182c;
+  background: var(--color-slate-800);
 }
 
 .Home-benefits {
@@ -68,7 +73,7 @@
 }
 
 .Home-benefit-title {
-  font-size: var(--font-lg);
+  font-size: var(--font-size-body-large);
   line-height: 2.8rem;
   font-weight: normal;
   margin-left: 1.5rem;
@@ -78,7 +83,7 @@
   font-size: 1.8rem;
   line-height: 2.3rem;
   max-width: 29rem;
-  color: #a0a3c4;
+  color: var(--color-slate-100);
   letter-spacing: 0;
 }
 
@@ -90,7 +95,7 @@
 }
 
 .Home-cta-section {
-  background: #101124;
+  background: var(--color-slate-900);
 }
 
 .Home-cta-container {
@@ -117,7 +122,7 @@
   font-size: 1.8rem;
   line-height: 2.3rem;
   letter-spacing: 0;
-  color: #a0a3c4;
+  color: var(--color-slate-100);
   margin-bottom: 5rem;
 }
 
@@ -127,7 +132,7 @@
 }
 
 .Home-cta-option-title {
-  font-size: var(--font-lg);
+  font-size: var(--font-size-body-large);
   line-height: 3.2rem;
   font-weight: bold;
   letter-spacing: 0px;
@@ -139,7 +144,7 @@
   font-size: 1.8rem;
   line-height: 2.3rem;
   letter-spacing: 0px;
-  color: #a0a3c4;
+  color: var(--color-slate-100);
   margin-bottom: 0.3rem;
 }
 
@@ -169,7 +174,7 @@
   max-width: 58.9rem;
   width: 100%;
   box-shadow: 0px 0.7rem 1.2rem #0000004d;
-  border: 1px solid #1e2136;
+  border: 1px solid var(--color-slate-700);
   padding: 1.6rem;
   background-position: center;
   background-repeat: no-repeat;
@@ -202,7 +207,7 @@
 .Home-token-card-section {
   padding-top: 7.75rem;
   padding-bottom: 7.75rem;
-  background: #17182c;
+  background: var(--color-slate-800);
   margin-bottom: -4.65rem;
 }
 
@@ -222,26 +227,29 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-column-gap: 1.5rem;
+  grid-row-gap: 1.5rem;
 }
 
 .Home-token-card-option {
   position: relative;
   padding: 2.325rem;
-  border-radius: 1.3rem;
   max-width: 59.2rem;
-  background: #16182e;
+  background: var(--color-slate-800);
   box-shadow: 0px 0.5rem 1.3rem #00000085;
   border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .Home-token-card-option-icon {
   display: flex;
   align-items: center;
   font-weight: 500;
-  font-size: var(--font-lg);
-  line-height: 1.2;
+  font-size: var(--font-size-h2);
+  line-height: var(--line-height-h2);
   letter-spacing: 0px;
-  color: #ffffff;
+  color: var(--color-white);
   height: 3.1rem;
 }
 
@@ -250,25 +258,29 @@
 }
 
 .Home-token-card-option-title {
-  font-size: 1.8rem;
-  line-height: 2.3rem;
+  font-size: var(--font-size-body-large);
+  line-height: var(--line-height-body-large);
   letter-spacing: 0px;
-  color: #fff;
+  color: var(--color-white);
   margin-top: 2.325rem;
 }
 
 .Home-token-card-option-apr {
-  font-size: var(--font-base);
-  line-height: 2.3rem;
+  font-size: var(--font-size-body-medium);
+  line-height: var(--line-height-body-medium);
   letter-spacing: 0px;
-  color: #a0a3c4;
+  color: var(--color-slate-100);
   margin-top: 1.9375rem;
 }
 
 .Home-token-card-option-action {
-  margin-top: 1.9375rem;
+  margin-top: 2rem;
   display: flex;
   justify-content: space-between;
+}
+
+.Token-card-buy {
+  margin-top: 3rem;
 }
 
 .Home-token-card-option-action > .buy a:first-child,
@@ -290,12 +302,12 @@
 }
 
 .Home-latest-info-block {
-  /* background: #17182C 0% 0% no-repeat padding-box; */
+  /* background: var(--color-slate-800) 0% 0% no-repeat padding-box; */
   box-shadow: 0px 0.5rem 2.2rem #0000001f;
   box-shadow: 0px 1.2rem 1.7rem #00000024;
   box-shadow: 0px 0.7rem 0.8rem #00000033;
   /* mix-blend-mode: multiply; */
-  border: 1px solid #ffffff14;
+  border: 1px solid var(--color-gray-900);
   border-radius: 4px;
   max-width: 38rem;
   width: 100%;
@@ -313,15 +325,15 @@
 }
 
 .Home-latest-info__title {
-  color: #a0a3c4;
-  font-size: var(--font-md);
+  color: var(--color-slate-100);
+  font-size: var(--font-size-body-medium);
   line-height: 2.5rem;
   letter-spacing: 0px;
 }
 
 .Home-latest-info__value {
   font-family: "RelativeNumber";
-  color: white;
+  color: var(--color-white);
   font-size: 2.9rem;
   line-height: 3.9rem;
   letter-spacing: 0px;
@@ -329,13 +341,13 @@
 
 .Home-latest-info__description {
   letter-spacing: 0px;
-  color: #a0a3c4;
-  font-size: var(--font-sm);
+  color: var(--color-slate-100);
+  font-size: var(--font-size-body-small);
   line-height: 2.5rem;
 }
 
 .Home-video-section {
-  background: #101124;
+  background: var(--color-slate-900);
   padding: 8rem 0;
 }
 
@@ -351,7 +363,7 @@
 }
 
 .Home-faqs-section {
-  background: #101124;
+  background: var(--color-slate-900);
   padding: 8rem 0;
 }
 
@@ -367,14 +379,14 @@
 
 .Home-faqs-introduction__title {
   letter-spacing: 0px;
-  color: #ffffff;
+  color: var(--color-white);
   font-size: 3.8rem;
   line-height: 4.8rem;
 }
 
 .Home-faqs-introduction__description {
   letter-spacing: 0px;
-  color: #a0a3c4;
+  color: var(--color-slate-100);
   font-size: 1.8rem;
   line-height: 2.3rem;
   margin-bottom: 3.7rem;
@@ -388,8 +400,8 @@
 }
 
 .Home-faqs-content {
-  background: #17182c;
-  border: 1px solid #1e2136;
+  background: var(--color-slate-800);
+  border: 1px solid var(--color-slate-700);
   border-radius: 4px;
   cursor: pointer;
   padding: 3.7rem 7.75rem;
@@ -414,14 +426,14 @@
   align-items: center;
   margin-right: 1.765rem;
   font-size: 1.3795rem;
-  color: #3041da;
+  color: var(--color-blue-700);
 }
 
 .Home-faqs-content-header__text {
   font-size: 1.7rem;
   line-height: 2.2rem;
   letter-spacing: 0px;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .Home-faqs-content-main {
@@ -430,7 +442,7 @@
   visibility: hidden;
   padding: 0 0rem 0 3.1rem;
   letter-spacing: 0px;
-  color: #a0a3c4;
+  color: var(--color-slate-100);
   transition: all 0.3s ease-in-out 0s;
 }
 
@@ -469,7 +481,7 @@
   }
 }
 
-@media (max-width: 750px) {
+@media (max-width: 650px) {
   .Home-token-card-options {
     display: grid;
     grid-template-columns: 1fr;
@@ -533,10 +545,10 @@
 
 @media (max-width: 400px) {
   .Home-description {
-    font-size: var(--font-base);
+    font-size: var(--font-size-body-medium);
     line-height: 2.17rem;
     max-width: 44.4rem;
-    color: #a0a3c4;
+    color: var(--color-slate-100);
     margin-bottom: 2.6rem;
   }
 

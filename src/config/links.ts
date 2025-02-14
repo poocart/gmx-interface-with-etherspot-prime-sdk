@@ -1,5 +1,7 @@
 import { ARBITRUM, AVALANCHE } from "config/chains";
-import { TOKENS_BY_SYMBOL_MAP } from "./tokens";
+import { TOKENS_BY_SYMBOL_MAP } from "sdk/configs/tokens";
+
+export const PRODUCTION_HOST = "https://app.gmx.io";
 
 const oneInchTokensMap = {
   [ARBITRUM]: {
@@ -24,6 +26,11 @@ export function get1InchSwapUrl(chainId: number, from?: string, to?: string) {
   return `${rootUrl}/${fromToken}/${toToken}`;
 }
 
+export function get1InchSwapUrlFromAddresses(chainId: number, fromAddress?: string, toAddress?: string) {
+  const addressesStr = [fromAddress, toAddress].filter(Boolean).join("/");
+  return `https://app.1inch.io/#/${chainId}/simple/swap/${addressesStr}`;
+}
+
 export function getLeaderboardLink(chainId) {
   if (chainId === ARBITRUM) {
     return "https://www.gmx.house/arbitrum/leaderboard";
@@ -32,4 +39,28 @@ export function getLeaderboardLink(chainId) {
     return "https://www.gmx.house/avalanche/leaderboard";
   }
   return "https://www.gmx.house";
+}
+
+export const DOCS_LINKS = {
+  multiplierPoints: "https://docs.gmx.io/docs/tokenomics/rewards/#multiplier-points",
+  fundingFees: "https://docs.gmx.io/docs/trading/v2/#funding-fees",
+  adaptiveFunding: "https://docs.gmx.io/docs/trading/v2/#adaptive-funding",
+  borrowingFees: "https://docs.gmx.io/docs/trading/v2/#borrowing-fees",
+};
+
+export const ARBITRUM_INCENTIVES_V2_URL =
+  "https://gmxio.notion.site/GMX-STIP-Bridge-Incentives-6967a56615b644eabc10f9a1a81b83ab";
+export const AVALANCHE_INCENTIVES_V2_URL =
+  "https://gmxio.notion.site/GMX-Summer-Boost-provide-liquidity-and-trade-perpetuals-to-grab-your-share-of-AVAX-rewards-13638f2e28934460a242f72def4f7d36";
+
+export function getIncentivesV2Url(chainId: number): string {
+  if (chainId === ARBITRUM) {
+    return ARBITRUM_INCENTIVES_V2_URL;
+  }
+
+  if (chainId === AVALANCHE) {
+    return AVALANCHE_INCENTIVES_V2_URL;
+  }
+
+  return ARBITRUM_INCENTIVES_V2_URL;
 }

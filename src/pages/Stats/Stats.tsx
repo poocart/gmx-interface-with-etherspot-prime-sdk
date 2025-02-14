@@ -1,81 +1,74 @@
-import { useWeb3React } from "@web3-react/core";
 import { getContract } from "config/contracts";
-import { getWhitelistedTokens } from "config/tokens";
+import { getWhitelistedV1Tokens } from "sdk/configs/tokens";
 import { TokenInfo, useInfoTokens } from "domain/tokens";
 import { useChainId } from "lib/chains";
 import { contractFetcher } from "lib/contracts";
-import { BASIS_POINTS_DIVISOR } from "lib/legacy";
+import { BASIS_POINTS_DIVISOR_BIGINT } from "config/factors";
 import useSWR from "swr";
 import { getServerUrl } from "config/backend";
 import { formatDistance } from "date-fns";
 
-import Reader from "abis/Reader.json";
-import VaultV2 from "abis/VaultV2.json";
-import { BigNumber, BigNumberish } from "ethers";
+import Reader from "sdk/abis/Reader.json";
+import VaultV2 from "sdk/abis/VaultV2.json";
+import { BigNumberish } from "ethers";
 import { bigNumberify, expandDecimals, formatAmount } from "lib/numbers";
 
 import "./Stats.css";
 import Tooltip from "components/Tooltip/Tooltip";
+import useWallet from "lib/wallets/useWallet";
+import { bigMath } from "sdk/utils/bigmath";
+import { formatAmountHuman } from "lib/numbers";
 
 function shareBar(share?: BigNumberish, total?: BigNumberish) {
-  if (!share || !total || bigNumberify(total)!.eq(0)) {
+  if (!share || !total) {
     return null;
   }
 
-  let progress = bigNumberify(share)!.mul(100).div(total).toNumber();
+  let progress = Number(bigMath.mulDiv(bigNumberify(share)!, 100n, BigInt(total)));
   progress = Math.min(progress, 100);
+
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const style = { width: `${progress}%` };
 
   return (
     <div className="Stats-share-bar">
-      <div className="Stats-share-bar-fill" style={{ width: `${progress}%` }} />
+      <div className="Stats-share-bar-fill" style={style} />
     </div>
   );
 }
 
-function formatAmountHuman(amount: BigNumberish | undefined, tokenDecimals: number) {
-  const n = Number(formatAmount(amount, tokenDecimals));
-
-  if (n > 1000000) {
-    return `${(n / 1000000).toFixed(1)}M`;
-  }
-  if (n > 1000) {
-    return `${(n / 1000).toFixed(1)}K`;
-  }
-  return n.toFixed(1);
-}
-
 export default function Stats() {
-  const { active, library } = useWeb3React();
+  const { active, signer } = useWallet();
   const { chainId } = useChainId();
 
   const readerAddress = getContract(chainId, "Reader");
   const nativeTokenAddress = getContract(chainId, "NATIVE_TOKEN");
 
-  const whitelistedTokens = getWhitelistedTokens(chainId);
+  const whitelistedTokens = getWhitelistedV1Tokens(chainId);
   const tokenList = whitelistedTokens.filter((t) => !t.isWrapped);
   const whitelistedTokenAddresses = whitelistedTokens.map((token) => token.address);
 
   const vaultAddress = getContract(chainId, "Vault");
 
-  const { data: totalTokenWeights } = useSWR<BigNumber>(
+  const { data: totalTokenWeights } = useSWR<bigint>(
     [`GlpSwap:totalTokenWeights:${active}`, chainId, vaultAddress, "totalTokenWeights"],
     {
-      fetcher: contractFetcher(library, VaultV2),
+      fetcher: contractFetcher(signer, VaultV2) as any,
     }
   );
 
   const { data: fundingRateInfo } = useSWR([active, chainId, readerAddress, "getFundingRates"], {
-    fetcher: contractFetcher(library, Reader, [vaultAddress, nativeTokenAddress, whitelistedTokenAddresses]),
+    fetcher: contractFetcher(signer, Reader, [vaultAddress, nativeTokenAddress, whitelistedTokenAddresses]),
   });
-  const { infoTokens } = useInfoTokens(library, chainId, active, undefined, fundingRateInfo as any);
+  const { infoTokens } = useInfoTokens(signer, chainId, active, undefined, fundingRateInfo as any);
 
-  let adjustedUsdgSupply = bigNumberify(0);
+  let adjustedUsdgSupply = 0n;
 
   for (let i = 0; i < tokenList.length; i++) {
     const token = tokenList[i];
     const tokenInfo = infoTokens[token.address];
-    if (tokenInfo && tokenInfo.usdgAmount) {
-      adjustedUsdgSupply = adjustedUsdgSupply!.add(tokenInfo.usdgAmount);
+    if (tokenInfo && tokenInfo.usdgAmount !== undefined) {
+      adjustedUsdgSupply = adjustedUsdgSupply! + tokenInfo.usdgAmount;
     }
   }
 
@@ -99,15 +92,17 @@ export default function Stats() {
     let className = "";
     if (
       isLong &&
-      tokenInfo.maxGlobalLongSize &&
-      tokenInfo.guaranteedUsd?.mul(11).div(10).gt(tokenInfo.maxGlobalLongSize)
+      tokenInfo.maxGlobalLongSize !== undefined &&
+      tokenInfo.guaranteedUsd !== undefined &&
+      bigMath.mulDiv(tokenInfo.guaranteedUsd, 11n, 10n) > tokenInfo.maxGlobalLongSize
     ) {
       className = "warn";
     }
     if (
       !isLong &&
-      tokenInfo.maxGlobalShortSize &&
-      tokenInfo.globalShortSize?.mul(11).div(10).gt(tokenInfo.maxGlobalShortSize)
+      tokenInfo.maxGlobalShortSize !== undefined &&
+      tokenInfo.globalShortSize !== undefined &&
+      bigMath.mulDiv(tokenInfo.globalShortSize, 11n, 10n) > tokenInfo.maxGlobalShortSize
     ) {
       className = "warn";
     }
@@ -166,6 +161,9 @@ export default function Stats() {
             />
           </th>
           <th>
+            <Tooltip handle="Min buffer" renderContent={() => "Floor, in tokens"} />
+          </th>
+          <th>
             <Tooltip
               handle="Long OI"
               renderContent={() =>
@@ -191,42 +189,45 @@ export default function Stats() {
           .filter((t: TokenInfo) => !t.isNative)
           .map((tokenInfo: TokenInfo) => {
             let maxPoolUsd;
-            if (tokenInfo.maxUsdgAmount && tokenInfo.maxUsdgAmount.gt(0)) {
+            if (tokenInfo.maxUsdgAmount !== undefined && tokenInfo.maxUsdgAmount > 0) {
               maxPoolUsd = expandDecimals(tokenInfo.maxUsdgAmount, 12);
             }
 
             let maxPoolClassName = "";
-            if (tokenInfo.managedUsd?.mul(11).div(10).gt(maxPoolUsd)) {
+            if (tokenInfo.managedUsd !== undefined && bigMath.mulDiv(tokenInfo.managedUsd, 11n, 10n) > maxPoolUsd) {
               maxPoolClassName = "warn";
             }
 
-            let targetWeightBps;
-            let currentWeightBps;
-            let targetUsdg;
+            let targetWeightBps: bigint | undefined = undefined;
+            let currentWeightBps: bigint | undefined = undefined;
+            let targetUsdg: bigint | undefined = undefined;
             let weightClassName = "";
-            let weightDiffBps;
-            if (tokenInfo.usdgAmount?.gt(0) && adjustedUsdgSupply?.gt(0) && tokenInfo.weight?.gt(0)) {
-              currentWeightBps = tokenInfo.usdgAmount.mul(BASIS_POINTS_DIVISOR).div(adjustedUsdgSupply);
+            let weightDiffBps: bigint | undefined = undefined;
+            if (
+              tokenInfo.usdgAmount !== undefined &&
+              tokenInfo.usdgAmount > 0 &&
+              adjustedUsdgSupply !== undefined &&
+              adjustedUsdgSupply > 0 &&
+              tokenInfo.weight !== undefined &&
+              tokenInfo.weight > 0
+            ) {
+              currentWeightBps = bigMath.mulDiv(tokenInfo.usdgAmount, BASIS_POINTS_DIVISOR_BIGINT, adjustedUsdgSupply);
               // use add(1).div(10).mul(10) to round numbers up
-              targetWeightBps = tokenInfo.weight
-                .mul(BASIS_POINTS_DIVISOR)
-                .div(totalTokenWeights as BigNumberish)
-                .add(1)
-                .div(10)
-                .mul(10);
+              targetWeightBps =
+                ((bigMath.mulDiv(tokenInfo.weight, BASIS_POINTS_DIVISOR_BIGINT, totalTokenWeights!) + 1n) / 10n) * 10n;
 
-              weightDiffBps = currentWeightBps.sub(targetWeightBps).abs();
-              if (weightDiffBps.gt(targetWeightBps.mul(35).div(100))) {
+              weightDiffBps = bigMath.abs(currentWeightBps - targetWeightBps);
+              if (weightDiffBps > bigMath.mulDiv(targetWeightBps, 35n, 100n)) {
                 weightClassName = "warn";
-              } else if (weightDiffBps.gt(targetWeightBps.mul(25).div(100))) {
+              } else if (weightDiffBps > bigMath.mulDiv(targetWeightBps, 25n, 100n)) {
                 weightClassName = "warn";
               }
 
-              targetUsdg = adjustedUsdgSupply.mul(targetWeightBps).div(BASIS_POINTS_DIVISOR);
+              targetUsdg = bigMath.mulDiv(adjustedUsdgSupply, targetWeightBps, BASIS_POINTS_DIVISOR_BIGINT);
             }
 
             return (
-              <tr>
+              <tr key={tokenInfo.address}>
                 <td>{tokenInfo.symbol}</td>
                 <td>
                   <>${formatAmountHuman(tokenInfo.managedUsd, 30)}</>
@@ -234,6 +235,10 @@ export default function Stats() {
                 <td className={maxPoolClassName}>
                   ${formatAmountHuman(tokenInfo.usdgAmount, 18)} / ${formatAmountHuman(tokenInfo.maxUsdgAmount, 18)}
                   {shareBar(tokenInfo.usdgAmount, tokenInfo.maxUsdgAmount)}
+                </td>
+                <td>
+                  {formatAmountHuman(tokenInfo.bufferAmount, tokenInfo.decimals)} /{" "}
+                  {formatAmountHuman(tokenInfo.poolAmount, tokenInfo.decimals)}
                 </td>
                 <td>{renderOiCell(tokenInfo, true)}</td>
                 <td>{renderOiCell(tokenInfo, false)}</td>
@@ -244,7 +249,13 @@ export default function Stats() {
                 <td>
                   ${formatAmountHuman(tokenInfo.usdgAmount, 18)} / ${formatAmountHuman(targetUsdg, 18)}
                 </td>
-                <td>{formatAmount(tokenInfo.fundingRate?.mul(24 * 365), 4, 2) + "%"}</td>
+                <td>
+                  {formatAmount(
+                    tokenInfo.fundingRate === undefined ? undefined : tokenInfo.fundingRate * (24n * 365n),
+                    4,
+                    2
+                  ) + "%"}
+                </td>
               </tr>
             );
           })}

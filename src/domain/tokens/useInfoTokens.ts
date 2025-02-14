@@ -1,58 +1,58 @@
-import { getContract } from "config/contracts";
+import { Signer } from "ethers";
 import useSWR from "swr";
-import { contractFetcher } from "lib/contracts";
-import VaultReader from "abis/VaultReader.json";
-import {
-  BASIS_POINTS_DIVISOR,
-  DEFAULT_MAX_USDG_AMOUNT,
-  MAX_PRICE_DEVIATION_BASIS_POINTS,
-  USD_DECIMALS,
-  USDG_ADDRESS,
-} from "lib/legacy";
+
 import { getServerUrl } from "config/backend";
-import { InfoTokens, Token, TokenInfo } from "./types";
-import { BigNumber } from "ethers";
-import { bigNumberify, expandDecimals } from "lib/numbers";
-import { getTokens, getWhitelistedTokens } from "config/tokens";
-import { Web3Provider } from "@ethersproject/providers";
+import { getContract } from "config/contracts";
+import { BASIS_POINTS_DIVISOR_BIGINT } from "config/factors";
+import { getV1Tokens, getWhitelistedV1Tokens } from "sdk/configs/tokens";
+import { bigMath } from "sdk/utils/bigmath";
+import { contractFetcher } from "lib/contracts";
+import { DEFAULT_MAX_USDG_AMOUNT, MAX_PRICE_DEVIATION_BASIS_POINTS, USDG_ADDRESS } from "lib/legacy";
+import { USD_DECIMALS } from "config/factors";
+import { expandDecimals } from "lib/numbers";
+import { PRICES_UPDATE_INTERVAL } from "lib/timeConstants";
+
+import { InfoTokens, Token, TokenInfo } from "sdk/types/tokens";
 import { getSpread } from "./utils";
 
+import VaultReader from "sdk/abis/VaultReader.json";
+
 export function useInfoTokens(
-  library: Web3Provider | undefined,
+  signer: Signer | undefined,
   chainId: number,
   active: boolean,
-  tokenBalances?: BigNumber[],
-  fundingRateInfo?: BigNumber[],
+  tokenBalances?: bigint[],
+  fundingRateInfo?: bigint[],
   vaultPropsLength?: number
 ) {
-  const tokens = getTokens(chainId);
+  const tokens = getV1Tokens(chainId);
   const vaultReaderAddress = getContract(chainId, "VaultReader");
   const vaultAddress = getContract(chainId, "Vault");
   const positionRouterAddress = getContract(chainId, "PositionRouter");
   const nativeTokenAddress = getContract(chainId, "NATIVE_TOKEN");
 
-  const whitelistedTokens = getWhitelistedTokens(chainId);
+  const whitelistedTokens = getWhitelistedV1Tokens(chainId);
   const whitelistedTokenAddresses = whitelistedTokens.map((token) => token.address);
 
-  const { data: vaultTokenInfo } = useSWR<BigNumber[], any>(
+  const { data: vaultTokenInfo } = useSWR<bigint[], any>(
     [`useInfoTokens:${active}`, chainId, vaultReaderAddress, "getVaultTokenInfoV4"],
     {
-      fetcher: contractFetcher(library, VaultReader, [
+      fetcher: contractFetcher(signer, VaultReader, [
         vaultAddress,
         positionRouterAddress,
         nativeTokenAddress,
         expandDecimals(1, 18),
         whitelistedTokenAddresses,
-      ]),
+      ]) as any,
     }
   );
 
   const indexPricesUrl = getServerUrl(chainId, "/prices");
 
-  const { data: indexPrices } = useSWR([indexPricesUrl], {
+  const { data: indexPrices } = useSWR(indexPricesUrl, {
     // @ts-ignore spread args incorrect type
-    fetcher: (...args) => fetch(...args).then((res) => res.json()),
-    refreshInterval: 500,
+    fetcher: (url) => fetch(url).then((res) => res.json()),
+    refreshInterval: PRICES_UPDATE_INTERVAL,
     refreshWhenHidden: true,
   });
 
@@ -72,12 +72,12 @@ export function useInfoTokens(
 
 function getInfoTokens(
   tokens: Token[],
-  tokenBalances: BigNumber[] | undefined,
+  tokenBalances: bigint[] | undefined,
   whitelistedTokens: Token[],
-  vaultTokenInfo: BigNumber[] | undefined,
-  fundingRateInfo: BigNumber[] | undefined,
+  vaultTokenInfo: bigint[] | undefined,
+  fundingRateInfo: bigint[] | undefined,
   vaultPropsLength: number | undefined,
-  indexPrices: { [address: string]: BigNumber },
+  indexPrices: { [address: string]: bigint },
   nativeTokenAddress: string
 ): InfoTokens {
   if (!vaultPropsLength) {
@@ -107,7 +107,7 @@ function getInfoTokens(
     if (vaultTokenInfo) {
       token.poolAmount = vaultTokenInfo[i * vaultPropsLength];
       token.reservedAmount = vaultTokenInfo[i * vaultPropsLength + 1];
-      token.availableAmount = token.poolAmount.sub(token.reservedAmount);
+      token.availableAmount = token.poolAmount - token.reservedAmount;
       token.usdgAmount = vaultTokenInfo[i * vaultPropsLength + 2];
       token.redemptionAmount = vaultTokenInfo[i * vaultPropsLength + 3];
       token.weight = vaultTokenInfo[i * vaultPropsLength + 4];
@@ -130,44 +130,44 @@ function getInfoTokens(
       token.contractMinPrice = token.minPrice;
       token.contractMaxPrice = token.maxPrice;
 
-      token.maxAvailableShort = bigNumberify(0)!;
+      token.maxAvailableShort = 0n;
 
       token.hasMaxAvailableShort = false;
-      if (token.maxGlobalShortSize.gt(0)) {
+      if (token.maxGlobalShortSize > 0) {
         token.hasMaxAvailableShort = true;
-        if (token.maxGlobalShortSize.gt(token.globalShortSize)) {
-          token.maxAvailableShort = token.maxGlobalShortSize.sub(token.globalShortSize);
+        if (token.maxGlobalShortSize > token.globalShortSize) {
+          token.maxAvailableShort = token.maxGlobalShortSize - token.globalShortSize;
         }
       }
 
-      if (token.maxUsdgAmount.eq(0)) {
+      if (token.maxUsdgAmount == 0n) {
         token.maxUsdgAmount = DEFAULT_MAX_USDG_AMOUNT;
       }
 
       token.availableUsd = token.isStable
-        ? token.poolAmount.mul(token.minPrice).div(expandDecimals(1, token.decimals))
-        : token.availableAmount.mul(token.minPrice).div(expandDecimals(1, token.decimals));
+        ? bigMath.mulDiv(token.poolAmount, token.minPrice, expandDecimals(1, token.decimals))
+        : bigMath.mulDiv(token.availableAmount, token.minPrice, expandDecimals(1, token.decimals));
 
-      token.maxAvailableLong = bigNumberify(0)!;
+      token.maxAvailableLong = 0n;
       token.hasMaxAvailableLong = false;
-      if (token.maxGlobalLongSize.gt(0)) {
+      if (token.maxGlobalLongSize > 0) {
         token.hasMaxAvailableLong = true;
 
-        if (token.maxGlobalLongSize.gt(token.guaranteedUsd)) {
-          const remainingLongSize = token.maxGlobalLongSize.sub(token.guaranteedUsd);
-          token.maxAvailableLong = remainingLongSize.lt(token.availableUsd) ? remainingLongSize : token.availableUsd;
+        if (token.maxGlobalLongSize > token.guaranteedUsd) {
+          const remainingLongSize = token.maxGlobalLongSize - token.guaranteedUsd;
+          token.maxAvailableLong = remainingLongSize < token.availableUsd ? remainingLongSize : token.availableUsd;
         }
       } else {
         token.maxAvailableLong = token.availableUsd;
       }
 
       token.maxLongCapacity =
-        token.maxGlobalLongSize.gt(0) && token.maxGlobalLongSize.lt(token.availableUsd.add(token.guaranteedUsd))
+        token.maxGlobalLongSize > 0 && token.maxGlobalLongSize < token.availableUsd + token.guaranteedUsd
           ? token.maxGlobalLongSize
-          : token.availableUsd.add(token.guaranteedUsd);
+          : token.availableUsd + token.guaranteedUsd;
 
-      token.managedUsd = token.availableUsd.add(token.guaranteedUsd);
-      token.managedAmount = token.managedUsd.mul(expandDecimals(1, token.decimals)).div(token.minPrice);
+      token.managedUsd = token.availableUsd + token.guaranteedUsd;
+      token.managedAmount = bigMath.mulDiv(token.managedUsd, expandDecimals(1, token.decimals), token.minPrice);
 
       setTokenUsingIndexPrices(token, indexPrices, nativeTokenAddress);
     }
@@ -189,7 +189,7 @@ function getInfoTokens(
 
 function setTokenUsingIndexPrices(
   token: TokenInfo,
-  indexPrices: { [address: string]: BigNumber },
+  indexPrices: { [address: string]: bigint },
   nativeTokenAddress: string
 ) {
   if (!indexPrices) {
@@ -200,22 +200,22 @@ function setTokenUsingIndexPrices(
 
   const indexPrice = indexPrices[tokenAddress];
 
-  if (!indexPrice) {
+  if (indexPrice === undefined) {
     return;
   }
 
-  const indexPriceBn = bigNumberify(indexPrice)!;
+  const indexPriceBn = BigInt(indexPrice);
 
-  if (indexPriceBn.eq(0)) {
+  if (indexPriceBn == 0n) {
     return;
   }
 
-  const spread = token.maxPrice!.sub(token.minPrice!);
-  const spreadBps = spread.mul(BASIS_POINTS_DIVISOR).div(token.maxPrice!.add(token.minPrice!).div(2));
+  const spread = token.maxPrice! - token.minPrice!;
+  const spreadBps = bigMath.mulDiv(spread, BASIS_POINTS_DIVISOR_BIGINT, (token.maxPrice! + token.minPrice!) / 2n);
 
-  if (spreadBps.gt(MAX_PRICE_DEVIATION_BASIS_POINTS - 50)) {
+  if (spreadBps > MAX_PRICE_DEVIATION_BASIS_POINTS - 50) {
     // only set one of the values as there will be a spread between the index price and the Chainlink price
-    if (indexPriceBn.gt(token.minPrimaryPrice!)) {
+    if (indexPriceBn > token.minPrimaryPrice!) {
       token.maxPrice = indexPriceBn;
     } else {
       token.minPrice = indexPriceBn;
@@ -223,7 +223,15 @@ function setTokenUsingIndexPrices(
     return;
   }
 
-  const halfSpreadBps = spreadBps.div(2).toNumber();
-  token.maxPrice = indexPriceBn.mul(BASIS_POINTS_DIVISOR + halfSpreadBps).div(BASIS_POINTS_DIVISOR);
-  token.minPrice = indexPriceBn.mul(BASIS_POINTS_DIVISOR - halfSpreadBps).div(BASIS_POINTS_DIVISOR);
+  const halfSpreadBps = spreadBps / 2n;
+  token.maxPrice = bigMath.mulDiv(
+    indexPriceBn,
+    BASIS_POINTS_DIVISOR_BIGINT + halfSpreadBps,
+    BASIS_POINTS_DIVISOR_BIGINT
+  );
+  token.minPrice = bigMath.mulDiv(
+    indexPriceBn,
+    BASIS_POINTS_DIVISOR_BIGINT - halfSpreadBps,
+    BASIS_POINTS_DIVISOR_BIGINT
+  );
 }

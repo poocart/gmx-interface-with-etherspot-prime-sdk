@@ -1,12 +1,13 @@
 .button {
   cursor: pointer;
-  font-size: var(--font-sm);
+  font-size: var(--font-size-body-medium);
+  line-height: var(--line-height-body-medium);
   display: inline-flex;
   align-items: center;
-  text-decoration: none;
   font-weight: normal;
   padding: 1.1rem 1.6rem;
   border: none;
+  user-select: none;
 
   &.center {
     justify-content: center;
@@ -22,10 +23,9 @@
 
   &.primary {
     background: var(--primary-btn-bg);
-    color: #fff;
+    color: var(--color-white);
     border-radius: 0.3rem;
     padding: 1.65rem 1.6rem;
-    line-height: 1;
 
     &:not([disabled]):hover {
       background: var(--primary-btn-hover);
@@ -38,30 +38,28 @@
 
   &.primary-action {
     background: var(--primary-btn-bg);
-    color: #fff;
+    color: var(--color-white);
     border-radius: 0.3rem;
     padding: 1.65rem 1.6rem;
-    line-height: 1;
 
-    &:not([disabled]):hover {
+    &:not([disabled], .disabled):hover {
       background: var(--primary-btn-hover);
-      box-shadow: 0 0 0.4rem 0.5rem rgb(45 66 252 / 10%);
+      box-shadow: 0 0 0.4rem 0.5rem color-mix(in srgb, var(--color-blue-600) 10%, transparent);
     }
 
-    &:not([disabled]):active {
+    &:not([disabled], .disabled):active {
       background-color: var(--primary-btn-active);
-      box-shadow: 0 0 0.4rem 0.6rem rgb(45 66 252 / 10%);
+      box-shadow: 0 0 0.4rem 0.6rem color-mix(in srgb, var(--color-blue-600) 10%, transparent);
     }
   }
 
   &.secondary {
-    background-color: rgba(180, 187, 255, 0.1);
+    background-color: var(--color-slate-700);
     border-radius: var(--border-radius-sm);
-    color: #fff;
+    color: var(--color-white);
     padding: 1.1rem 1.25rem;
     font-weight: normal;
     position: relative;
-    line-height: 1;
     letter-spacing: 0;
 
     > .btn-image {
@@ -80,12 +78,60 @@
       max-width: 0.8rem;
     }
 
-    &:not([disabled]):hover {
-      background: rgba(80, 87, 126, 0.6);
+    &:not([disabled], .disabled):hover {
+      background-color: var(--color-cold-blue-700);
     }
 
-    &:not([disabled]):active {
-      background: rgba(80, 87, 126, 0.7);
+    &:not([disabled], .disabled):active {
+      background: var(--color-cold-blue-500);
+    }
+  }
+
+  &.ghost {
+    background-color: transparent;
+    border-radius: var(--border-radius-sm);
+    color: var(--color-white);
+    padding: 1.1rem 1.25rem;
+    font-weight: normal;
+    position: relative;
+    letter-spacing: 0;
+
+    > .btn-image {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 2.3rem;
+      max-width: 2.3rem;
+      margin-right: 1.15rem;
+    }
+
+    > .arrow-icon {
+      position: absolute;
+      right: 0.5rem;
+      top: 0.5rem;
+      max-width: 0.8rem;
+    }
+
+    &:not([disabled], .disabled):hover {
+      background-color: var(--color-cold-blue-700);
+    }
+
+    &:not([disabled], .disabled):active {
+      background: var(--color-cold-blue-500);
+    }
+  }
+
+  &.link {
+    color: var(--color-slate-100);
+    text-decoration: underline;
+    padding: 0;
+
+    &.disabled {
+      text-decoration: none;
+    }
+
+    &:not([disabled], .disabled):hover {
+      color: var(--color-white);
     }
   }
 
@@ -93,6 +139,19 @@
   &:disabled {
     box-shadow: none;
     cursor: not-allowed;
-    opacity: 0.8;
+
+    &.primary-action,
+    &.primary {
+      background-color: #1d235f;
+    }
+
+    &.secondary {
+      background-color: #1b1e32;
+      color: var(--color-slate-500);
+    }
+  }
+
+  &.slim {
+    padding: 6px 10px;
   }
 }

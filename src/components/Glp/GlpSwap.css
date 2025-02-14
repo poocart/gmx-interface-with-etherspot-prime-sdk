@@ -7,24 +7,19 @@
 
 .Tab-title {
   letter-spacing: 0px;
-  color: #ffffff;
+  color: var(--color-white);
   font-size: 3.41rem;
   font-weight: 500;
 }
 
 .Tab-description {
   letter-spacing: 0px;
-  color: #a9a9b0;
+  color: var(--color-gray-400);
   margin-top: 0.8rem;
 }
 
 .Tab-description span {
   color: #f89191;
-}
-
-.GlpSwap-from-token .Modal {
-  align-items: flex-start;
-  justify-content: flex-end;
 }
 
 .GlpSwap-content .GlpSwap-stats-card,
@@ -38,7 +33,7 @@
 }
 
 .GlpSwap-stats-card .App-card-row .label {
-  color: #a9a9b0;
+  color: var(--color-gray-400);
   opacity: 1;
 }
 
@@ -72,22 +67,22 @@
 }
 
 .App-card-title-mark .App-card-title-mark-title {
-  font-size: var(--font-md);
+  font-size: var(--font-size-body-medium);
   line-height: 2.1rem;
   letter-spacing: 0px;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .App-card-title-mark .App-card-title-mark-subtitle {
   font-size: 1.2rem;
   line-height: 1.5rem;
   letter-spacing: 0px;
-  color: #a9a9b0;
+  color: var(--color-slate-100);
 }
 
 .GlpSwap-token-list {
   border-radius: 4px;
-  background: #16182e;
+  background: var(--color-slate-800);
   padding: 1.5rem;
   padding-top: 0;
   text-align: left;
@@ -114,7 +109,7 @@
 
 .GlpSwap-box .Exchange-info-row .Exchange-info-label {
   margin-right: 0.8rem;
-  color: #a9a9b0;
+  color: var(--color-gray-400);
   opacity: 1;
 }
 
@@ -128,7 +123,7 @@
   margin: 0 auto;
   justify-content: center;
   min-height: 4.8rem;
-  font-size: var(--font-sm);
+  font-size: var(--font-size-body-small);
 }
 
 .token-table {
@@ -137,7 +132,7 @@
   width: calc(100% + 3.1rem);
   border-spacing: 0;
   white-space: nowrap;
-  font-size: var(--font-base);
+  font-size: var(--font-size-body-medium);
 }
 
 .token-grid {
@@ -171,7 +166,6 @@
 
 .token-table td {
   letter-spacing: 0.25px;
-  color: #ffffffde;
 }
 
 .token-table th:first-child,
@@ -190,7 +184,7 @@
 .token-table th {
   font-weight: normal;
   letter-spacing: 0.25px;
-  color: #a9a9b0;
+  color: var(--color-gray-400);
   text-transform: uppercase;
 }
 
@@ -210,7 +204,7 @@
 .AppOrder-ball-icon {
   text-align: center;
   display: block;
-  font-size: var(--font-lg);
+  font-size: var(--font-size-body-large);
   opacity: 0.7;
 }
 
@@ -223,29 +217,28 @@
 
 .AppOrder-ball {
   position: absolute;
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 36px;
+  height: 36px;
   left: 50%;
-  margin-left: -1.7825rem;
-  top: -2.5rem;
+  transform: translateX(-50%);
+  top: -20px;
   border-radius: 3.1rem;
   cursor: pointer;
   user-select: none;
-  background: var(--primary-btn-bg);
+  background: var(--color-cold-blue-500);
   display: flex;
   justify-content: center;
   align-items: center;
   border: none;
-  color: white;
-  opacity: 0.8;
+  color: var(--color-white);
 }
 
 .AppOrder-ball:hover {
-  background: var(--primary-btn-hover);
+  background: #484e92;
 }
 
 .AppOrder-ball:active {
-  background: var(--primary-btn-active);
+  background: #505699;
 }
 
 .AppOrder-ball:hover .AppOrder-ball-icon {
@@ -270,11 +263,6 @@
 }
 
 @media (max-width: 1100px) {
-  .GlpSwap-from-token .Modal {
-    align-items: center;
-    justify-content: center;
-  }
-
   .GlpSwap-token-list {
     border: none;
     background-color: transparent;
@@ -296,7 +284,7 @@
     margin-top: 0.8rem;
   }
 }
-@media (max-width: 510px) {
+@media (max-width: 600px) {
   .token-grid {
     display: grid;
     grid-template-columns: 1fr;

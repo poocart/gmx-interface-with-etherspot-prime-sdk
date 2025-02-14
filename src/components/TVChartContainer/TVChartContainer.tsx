@@ -1,54 +1,88 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { TV_CHART_RELOAD_TIMESTAMP_KEY, TV_SAVE_LOAD_CHARTS_KEY } from "config/localStorage";
-import { useLocalStorage, useMedia } from "react-use";
-import { defaultChartProps, DEFAULT_PERIOD, disabledFeaturesOnMobile } from "./constants";
-import useTVDatafeed from "domain/tradingview/useTVDatafeed";
-import { ChartData, IChartingLibraryWidget, IPositionLineAdapter } from "../../charting_library";
-import { getObjectKeyFromValue } from "domain/tradingview/utils";
-import { SaveLoadAdapter } from "./SaveLoadAdapter";
-import { SUPPORTED_RESOLUTIONS, TV_CHART_RELOAD_INTERVAL } from "config/tradingview";
-import { isChartAvailabeForToken } from "config/tokens";
-import { TVDataProvider } from "domain/tradingview/TVDataProvider";
 import Loader from "components/Common/Loader";
-import { useLocalStorageSerializeKey } from "lib/localStorage";
-import { CHART_PERIODS } from "lib/legacy";
+import { TV_SAVE_LOAD_CHARTS_KEY } from "config/localStorage";
+import { isChartAvailableForToken } from "sdk/configs/tokens";
+import { SUPPORTED_RESOLUTIONS_V1, SUPPORTED_RESOLUTIONS_V2 } from "config/tradingview";
+import { useSettings } from "context/SettingsContext/SettingsContextProvider";
+import { useOracleKeeperFetcher } from "lib/oracleKeeperFetcher";
+import { TokenPrices } from "domain/tokens";
+import { DataFeed } from "domain/tradingview/DataFeed";
+import { getObjectKeyFromValue, getSymbolName } from "domain/tradingview/utils";
+import { useTradePageVersion } from "lib/useTradePageVersion";
+import { CSSProperties, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLatest, useLocalStorage, useMedia } from "react-use";
+import type {
+  ChartData,
+  ChartingLibraryWidgetOptions,
+  IChartingLibraryWidget,
+  IPositionLineAdapter,
+  ResolutionString,
+} from "../../charting_library";
+import { SaveLoadAdapter } from "./SaveLoadAdapter";
+import { defaultChartProps, disabledFeaturesOnMobile } from "./constants";
 
-type ChartLine = {
+export type ChartLine = {
   price: number;
   title: string;
 };
 
 type Props = {
-  symbol: string;
   chainId: number;
-  savedShouldShowPositionLines: boolean;
   chartLines: ChartLine[];
-  onSelectToken: () => void;
-  dataProvider?: TVDataProvider;
+  period: string;
+  setPeriod: (period: string) => void;
+  chartToken:
+    | ({
+        symbol: string;
+      } & TokenPrices)
+    | { symbol: string };
+  supportedResolutions: typeof SUPPORTED_RESOLUTIONS_V1 | typeof SUPPORTED_RESOLUTIONS_V2;
+  visualMultiplier?: number;
+  setIsCandlesLoaded?: (isCandlesLoaded: boolean) => void;
 };
 
 export default function TVChartContainer({
-  symbol,
+  chartToken,
   chainId,
-  savedShouldShowPositionLines,
   chartLines,
-  onSelectToken,
-  dataProvider,
+  period,
+  setPeriod,
+  supportedResolutions,
+  visualMultiplier,
+  setIsCandlesLoaded,
 }: Props) {
-  let [period, setPeriod] = useLocalStorageSerializeKey([chainId, "Chart-period"], DEFAULT_PERIOD);
-
-  if (!period || !(period in CHART_PERIODS)) {
-    period = DEFAULT_PERIOD;
-  }
-
+  const { shouldShowPositionLines } = useSettings();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const tvWidgetRef = useRef<IChartingLibraryWidget | null>(null);
   const [chartReady, setChartReady] = useState(false);
   const [chartDataLoading, setChartDataLoading] = useState(true);
   const [tvCharts, setTvCharts] = useLocalStorage<ChartData[] | undefined>(TV_SAVE_LOAD_CHARTS_KEY, []);
-  const { datafeed, resetCache } = useTVDatafeed({ dataProvider });
+
+  const [tradePageVersion] = useTradePageVersion();
+
+  const oracleKeeperFetcher = useOracleKeeperFetcher(chainId);
+
+  const [datafeed, setDatafeed] = useState<DataFeed | null>(null);
+
+  useEffect(() => {
+    const newDatafeed = new DataFeed(chainId, oracleKeeperFetcher, tradePageVersion);
+    if (setIsCandlesLoaded) {
+      newDatafeed.addEventListener("candlesDisplay.success", (event: Event) => {
+        const isFirstDraw = (event as CustomEvent).detail.isFirstTimeLoad;
+        if (isFirstDraw) {
+          setIsCandlesLoaded(true);
+        }
+      });
+    }
+    setDatafeed((prev) => {
+      if (prev) {
+        prev.destroy();
+      }
+      return newDatafeed;
+    });
+  }, [chainId, oracleKeeperFetcher, setIsCandlesLoaded, tradePageVersion]);
+
   const isMobile = useMedia("(max-width: 550px)");
-  const symbolRef = useRef(symbol);
+  const symbolRef = useRef(chartToken.symbol);
 
   const drawLineOnChart = useCallback(
     (title: string, price: number) => {
@@ -72,34 +106,10 @@ export default function TVChartContainer({
     [chartReady]
   );
 
-  /* Tradingview charting library only fetches the historical data once so if the tab is inactive or system is in sleep mode
-  for a long time, the historical data will be outdated. */
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        localStorage.setItem(TV_CHART_RELOAD_TIMESTAMP_KEY, Date.now().toString());
-      } else {
-        const tvReloadTimestamp = Number(localStorage.getItem(TV_CHART_RELOAD_TIMESTAMP_KEY));
-        if (tvReloadTimestamp && Date.now() - tvReloadTimestamp > TV_CHART_RELOAD_INTERVAL) {
-          if (resetCache) {
-            resetCache();
-            tvWidgetRef.current?.activeChart().resetData();
-          }
-        }
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [resetCache]);
-
   useEffect(
     function updateLines() {
       const lines: (IPositionLineAdapter | undefined)[] = [];
-      if (savedShouldShowPositionLines) {
+      if (shouldShowPositionLines) {
         chartLines.forEach((order) => {
           lines.push(drawLineOnChart(order.title, order.price));
         });
@@ -108,24 +118,50 @@ export default function TVChartContainer({
         lines.forEach((line) => line?.remove());
       };
     },
-    [chartLines, savedShouldShowPositionLines, drawLineOnChart]
+    [chartLines, shouldShowPositionLines, drawLineOnChart]
   );
 
   useEffect(() => {
-    if (chartReady && tvWidgetRef.current && symbol !== tvWidgetRef.current?.activeChart?.().symbol()) {
-      if (isChartAvailabeForToken(chainId, symbol)) {
-        tvWidgetRef.current.setSymbol(symbol, tvWidgetRef.current.activeChart().resolution(), () => {});
-      }
+    if (
+      chartReady &&
+      tvWidgetRef.current &&
+      chartToken.symbol &&
+      isChartAvailableForToken(chainId, chartToken.symbol)
+    ) {
+      tvWidgetRef.current.setSymbol(
+        getSymbolName(chartToken.symbol, visualMultiplier),
+        tvWidgetRef.current.activeChart().resolution(),
+        async () => {
+          const priceScale = tvWidgetRef.current?.activeChart().getPanes().at(0)?.getMainSourcePriceScale();
+          if (priceScale) {
+            priceScale.setAutoScale(true);
+          }
+        }
+      );
     }
-  }, [symbol, chartReady, period, chainId]);
+  }, [chainId, chartReady, chartToken.symbol, visualMultiplier]);
+
+  const lastPeriod = useLatest(period);
+  const lastSupportedResolutions = useLatest(supportedResolutions);
+
+  useLayoutEffect(() => {
+    if (symbolRef.current) {
+      datafeed?.prefetchBars(
+        symbolRef.current,
+        getObjectKeyFromValue(lastPeriod.current, lastSupportedResolutions.current) as ResolutionString
+      );
+    }
+  }, [datafeed, lastPeriod, lastSupportedResolutions]);
 
   useEffect(() => {
-    const widgetOptions = {
+    if (!datafeed) return;
+
+    const widgetOptions: ChartingLibraryWidgetOptions = {
       debug: false,
-      symbol: symbolRef.current, // Using ref to avoid unnecessary re-renders on symbol change and still have access to the latest symbol
-      datafeed: datafeed,
+      symbol: symbolRef.current && getSymbolName(symbolRef.current, visualMultiplier), // Using ref to avoid unnecessary re-renders on symbol change and still have access to the latest symbol
+      datafeed,
       theme: defaultChartProps.theme,
-      container: chartContainerRef.current,
+      container: chartContainerRef.current!,
       library_path: defaultChartProps.library_path,
       locale: defaultChartProps.locale,
       loading_screen: defaultChartProps.loading_screen,
@@ -133,33 +169,54 @@ export default function TVChartContainer({
       disabled_features: isMobile
         ? defaultChartProps.disabled_features.concat(disabledFeaturesOnMobile)
         : defaultChartProps.disabled_features,
-      client_id: defaultChartProps.clientId,
-      user_id: defaultChartProps.userId,
+      client_id: defaultChartProps.client_id,
+      user_id: defaultChartProps.user_id,
       fullscreen: defaultChartProps.fullscreen,
       autosize: defaultChartProps.autosize,
       custom_css_url: defaultChartProps.custom_css_url,
       overrides: defaultChartProps.overrides,
-      interval: getObjectKeyFromValue(period, SUPPORTED_RESOLUTIONS),
-      favorites: defaultChartProps.favorites,
+      interval: getObjectKeyFromValue(period, supportedResolutions) as ResolutionString,
+      favorites: { ...defaultChartProps.favorites, intervals: Object.keys(supportedResolutions) as ResolutionString[] },
       custom_formatters: defaultChartProps.custom_formatters,
-      save_load_adapter: new SaveLoadAdapter(chainId, tvCharts, setTvCharts, onSelectToken),
+      load_last_chart: true,
+      auto_save_delay: 1,
+      save_load_adapter: new SaveLoadAdapter(tvCharts, setTvCharts, tradePageVersion),
     };
     tvWidgetRef.current = new window.TradingView.widget(widgetOptions);
+
     tvWidgetRef.current!.onChartReady(function () {
       setChartReady(true);
-      tvWidgetRef.current!.applyOverrides({
-        "paneProperties.background": "#16182e",
-        "paneProperties.backgroundType": "solid",
-      });
+
+      const savedPeriod = tvWidgetRef.current?.activeChart().resolution();
+      const preferredPeriod = getObjectKeyFromValue(period, supportedResolutions) as ResolutionString;
+
+      if (savedPeriod && savedPeriod !== preferredPeriod) {
+        tvWidgetRef.current?.activeChart().setResolution(preferredPeriod);
+      }
+
       tvWidgetRef.current
         ?.activeChart()
         .onIntervalChanged()
         .subscribe(null, (interval) => {
-          if (SUPPORTED_RESOLUTIONS[interval]) {
-            const period = SUPPORTED_RESOLUTIONS[interval];
+          if (supportedResolutions[interval]) {
+            const period = supportedResolutions[interval];
             setPeriod(period);
+            tvWidgetRef.current?.saveChartToServer(undefined, undefined, {
+              chartName: `gmx-chart-v${tradePageVersion}`,
+            });
+
+            const priceScale = tvWidgetRef.current?.activeChart().getPanes().at(0)?.getMainSourcePriceScale();
+            if (priceScale) {
+              priceScale.setAutoScale(true);
+            }
           }
         });
+
+      tvWidgetRef.current?.subscribe("onAutoSaveNeeded", () => {
+        tvWidgetRef.current?.saveChartToServer(undefined, undefined, {
+          chartName: `gmx-chart-v${tradePageVersion}`,
+        });
+      });
 
       tvWidgetRef.current?.activeChart().dataReady(() => {
         setChartDataLoading(false);
@@ -176,16 +233,17 @@ export default function TVChartContainer({
     };
     // We don't want to re-initialize the chart when the symbol changes. This will make the chart flicker.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chainId]);
+  }, [chainId, datafeed]);
+
+  const style = useMemo<CSSProperties>(
+    () => ({ visibility: !chartDataLoading ? "visible" : "hidden" }),
+    [chartDataLoading]
+  );
 
   return (
     <div className="ExchangeChart-error">
       {chartDataLoading && <Loader />}
-      <div
-        style={{ visibility: !chartDataLoading ? "visible" : "hidden" }}
-        ref={chartContainerRef}
-        className="TVChartContainer ExchangeChart-bottom-content"
-      />
+      <div style={style} ref={chartContainerRef} className="ExchangeChart-bottom-content" />
     </div>
   );
 }

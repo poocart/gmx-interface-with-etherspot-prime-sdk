@@ -5,25 +5,25 @@ import Select from "components/Select/Select";
 
 import "./ReferralsTier.scss";
 import { useReferrerTier, setAffiliateTier as contractSetAffiliateTier } from "domain/referrals";
-import { useWeb3React } from "@web3-react/core";
 import { useChainId } from "lib/chains";
+import useWallet from "lib/wallets/useWallet";
 
 export default function ReferralsTier() {
-  const { active, library } = useWeb3React();
+  const { active, signer } = useWallet();
   const { chainId } = useChainId();
 
   const [affiliate, setAffiliate] = useState<string>("");
   const [affiliateTier, setAffiliateTier] = useState<number>(1);
-  const { referrerTier: currentAffiliateTier } = useReferrerTier(library, chainId, affiliate);
+  const { referrerTier: currentAffiliateTier } = useReferrerTier(signer, chainId, affiliate);
 
   const onConfirmation = useCallback(() => {
     if (affiliate) {
-      contractSetAffiliateTier(chainId, affiliate, affiliateTier, library, {
+      contractSetAffiliateTier(chainId, affiliate, affiliateTier, signer, {
         sentMsg: "Transaction sent!",
         failMsg: "Transaction failed.",
       });
     }
-  }, [affiliate, affiliateTier, chainId, library]);
+  }, [affiliate, affiliateTier, chainId, signer]);
 
   function renderForm() {
     if (!active) return null;
@@ -43,7 +43,7 @@ export default function ReferralsTier() {
           <>
             <div className="ReferralsTier-row">
               <label className="ReferralsTier-label">Current Tier:</label>
-              <strong>{currentAffiliateTier?.add(1).toString()}</strong>
+              <strong>{currentAffiliateTier === undefined ? undefined : String(currentAffiliateTier + 1n)}</strong>
             </div>
             <div className="ReferralsTier-row">
               <label className="ReferralsTier-label">New Tier:</label>
@@ -65,7 +65,7 @@ export default function ReferralsTier() {
   }
 
   return (
-    <div className="ReferralsTier">
+    <div className="page-layout default-container">
       <h1>Referrals Tier</h1>
       {!active && <div>Wallet is not connected</div>}
       {renderForm()}

@@ -1,79 +1,254 @@
+import {
+  FloatingArrow,
+  FloatingPortal,
+  Placement,
+  arrow,
+  autoUpdate,
+  flip,
+  offset,
+  shift,
+  size,
+  useClick,
+  useDismiss,
+  useFloating,
+  useHover,
+  useInteractions,
+} from "@floating-ui/react";
+import { getOppositePlacement, getOppositeAlignmentPlacement } from "@floating-ui/utils";
 import cx from "classnames";
-import { useCallback, useState, useRef } from "react";
-import { IS_TOUCH } from "config/env";
+import {
+  ComponentPropsWithoutRef,
+  ElementType,
+  MouseEvent,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
-const OPEN_DELAY = 0;
-const CLOSE_DELAY = 100;
+import { DEFAULT_TOOLTIP_POSITION, TOOLTIP_CLOSE_DELAY, TOOLTIP_OPEN_DELAY } from "config/ui";
+import { usePrevious } from "lib/usePrevious";
 
-type Props = {
-  handle: React.ReactNode;
-  renderContent: () => React.ReactNode;
-  position?: string;
-  trigger?: string;
-  className?: string;
+import "./Tooltip.scss";
+
+export type TooltipPosition = Placement;
+
+type InnerTooltipProps<T extends ElementType | undefined> = {
+  /**
+   * Takes precedence over `children`
+   */
+  handle?: ReactNode;
+  children?: ReactNode;
+  renderContent?: () => ReactNode;
+  content?: ReactNode | undefined | null;
+  position?: TooltipPosition;
   disableHandleStyle?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
   handleClassName?: string;
+  handleStyle?: React.CSSProperties;
+  tooltipClassName?: string;
+  /**
+   * Disables interactions with the handle. Does not prevent the tooltip content from showing.
+   */
   isHandlerDisabled?: boolean;
+  /**
+   * Disables the tooltip content from showing.
+   */
+  disabled?: boolean;
+  openDelay?: number;
+  closeDelay?: number;
+  maxAllowedWidth?: number;
+  /**
+   * The element to render the tooltip as. Defaults to `span`.
+   *
+   * This element should extend `HTMLProps<HTMLElement>`.
+   */
+  as?: T;
+  withPortal?: boolean;
+  shouldStopPropagation?: boolean;
+  fitHandleWidth?: boolean;
+  closeOnDoubleClick?: boolean;
 };
 
-export default function Tooltip(props: Props) {
+export type TooltipProps<T extends ElementType | undefined> = InnerTooltipProps<T> &
+  (T extends undefined ? {} : Omit<ComponentPropsWithoutRef<Exclude<T, undefined>>, keyof InnerTooltipProps<T>>);
+
+export default function Tooltip<T extends ElementType>({
+  handle,
+  children,
+  renderContent,
+  content,
+  position = DEFAULT_TOOLTIP_POSITION,
+  className,
+  style,
+  disableHandleStyle,
+  handleClassName,
+  handleStyle,
+  tooltipClassName,
+  isHandlerDisabled,
+  disabled,
+  openDelay = TOOLTIP_OPEN_DELAY,
+  closeDelay = TOOLTIP_CLOSE_DELAY,
+  maxAllowedWidth = 350, // in px
+  as,
+  withPortal,
+  shouldStopPropagation,
+  fitHandleWidth,
+  closeOnDoubleClick,
+  ...containerProps
+}: TooltipProps<T>) {
   const [visible, setVisible] = useState(false);
-  const intervalCloseRef = useRef<ReturnType<typeof setTimeout> | null>();
-  const intervalOpenRef = useRef<ReturnType<typeof setTimeout> | null>();
+  const arrowRef = useRef<SVGSVGElement>(null);
+  const { refs, floatingStyles, context } = useFloating({
+    middleware: [
+      offset(10),
+      flip({
+        fallbackPlacements: [
+          getOppositeAlignmentPlacement(position),
+          getOppositePlacement(position),
+          "left-start",
+          "right-start",
+          "bottom",
+          "top",
+        ],
+      }),
+      shift({
+        padding: 10,
+      }),
+      size({
+        apply: (state) => {
+          Object.assign(state.elements.floating.style, {
+            maxWidth: `${maxAllowedWidth}px`,
+          });
 
-  const position = props.position ?? "left-bottom";
-  const trigger = props.trigger ?? "hover";
+          if (fitHandleWidth) {
+            Object.assign(state.elements.floating.style, {
+              maxWidth: `${state.rects.reference.width}px`,
+              minWidth: `${state.rects.reference.width}px`,
+            });
+          }
+        },
+      }),
+      arrow({ element: arrowRef, padding: 4 }),
+    ],
+    placement: position,
+    whileElementsMounted: autoUpdate,
+    open: visible,
+    onOpenChange: setVisible,
+  });
 
-  const onMouseEnter = useCallback(() => {
-    if (trigger !== "hover" || IS_TOUCH) return;
-    if (intervalCloseRef.current) {
-      clearInterval(intervalCloseRef.current);
-      intervalCloseRef.current = null;
-    }
-    if (!intervalOpenRef.current) {
-      intervalOpenRef.current = setTimeout(() => {
-        setVisible(true);
-        intervalOpenRef.current = null;
-      }, OPEN_DELAY);
-    }
-  }, [setVisible, intervalCloseRef, intervalOpenRef, trigger]);
+  const previousDisabled = usePrevious(disabled);
 
-  const onMouseClick = useCallback(() => {
-    if (trigger !== "click" && !IS_TOUCH) return;
-    if (intervalCloseRef.current) {
-      clearInterval(intervalCloseRef.current);
-      intervalCloseRef.current = null;
-    }
-    if (intervalOpenRef.current) {
-      clearInterval(intervalOpenRef.current);
-      intervalOpenRef.current = null;
-    }
-
-    setVisible(true);
-  }, [setVisible, intervalCloseRef, trigger]);
-
-  const onMouseLeave = useCallback(() => {
-    intervalCloseRef.current = setTimeout(() => {
+  useEffect(() => {
+    if (disabled && !previousDisabled && visible) {
       setVisible(false);
-      intervalCloseRef.current = null;
-    }, CLOSE_DELAY);
-    if (intervalOpenRef.current) {
-      clearInterval(intervalOpenRef.current);
-      intervalOpenRef.current = null;
     }
-  }, [setVisible, intervalCloseRef]);
+  }, [disabled, previousDisabled, visible]);
 
-  const className = cx("Tooltip", props.className);
+  const hover = useHover(context, {
+    enabled: !disabled,
+    delay: {
+      open: openDelay,
+      close: closeDelay,
+    },
+  });
+  const click = useClick(context, {
+    enabled: !disabled && closeOnDoubleClick,
+    toggle: closeOnDoubleClick,
+  });
+  const dismiss = useDismiss(context, {
+    enabled: !disabled,
+  });
+
+  const { getReferenceProps, getFloatingProps } = useInteractions([hover, click, dismiss]);
+
+  const preventClick = useCallback(
+    (event: MouseEvent) => {
+      event.preventDefault();
+      if (shouldStopPropagation) {
+        event.stopPropagation();
+      }
+    },
+    [shouldStopPropagation]
+  );
+
+  useEffect(
+    function handleFocusWithin() {
+      if (disabled || visible) {
+        return;
+      }
+
+      // If element was blurred, allow some time so that activeElement is updated
+      requestAnimationFrame(() => {
+        const focusWithin = (refs.reference.current as HTMLElement)?.contains(document.activeElement);
+
+        if (focusWithin) {
+          setVisible(true);
+        }
+      });
+    },
+    [disabled, refs.reference, visible]
+  );
+
+  const finalContent = visible ? content ?? renderContent?.() : undefined;
+
+  const tooltipContent = visible ? (
+    <div
+      ref={refs.setFloating}
+      style={floatingStyles}
+      {...getFloatingProps()}
+      className={cx("Tooltip-popup", tooltipClassName)}
+    >
+      <FloatingArrow ref={arrowRef} context={context} className="fill-slate-600" />
+      {finalContent}
+    </div>
+  ) : undefined;
+
+  if (as) {
+    const Container = as as any;
+    return (
+      <Container
+        {...containerProps}
+        className={cx("Tooltip", className)}
+        ref={refs.setReference}
+        {...getReferenceProps({
+          onClick: (e: MouseEvent) => {
+            preventClick(e);
+            containerProps.onClick?.(e);
+          },
+        })}
+      >
+        {handle ?? children}
+        {visible && withPortal && <FloatingPortal>{tooltipContent}</FloatingPortal>}
+        {visible && !withPortal && tooltipContent}
+      </Container>
+    );
+  }
 
   return (
-    <span className={className} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onClick={onMouseClick}>
+    <span {...containerProps} className={cx("Tooltip", className)} style={style}>
       <span
-        className={cx({ "Tooltip-handle": !props.disableHandleStyle }, [props.handleClassName], { active: visible })}
+        ref={refs.setReference}
+        className={cx({ "Tooltip-handle": !disableHandleStyle }, handleClassName)}
+        style={handleStyle}
+        {...getReferenceProps({
+          onClick: (e: MouseEvent) => {
+            preventClick(e);
+            containerProps.onClick?.(e);
+          },
+        })}
       >
         {/* For onMouseLeave to work on disabled button https://github.com/react-component/tooltip/issues/18#issuecomment-411476678 */}
-        {props.isHandlerDisabled ? <div className="Tooltip-disabled-wrapper">{props.handle}</div> : <>{props.handle}</>}
+        {isHandlerDisabled ? (
+          <div className="pointer-events-none w-full flex-none [text-decoration:inherit]">{handle ?? children}</div>
+        ) : (
+          <>{handle ?? children}</>
+        )}
       </span>
-      {visible && <div className={cx(["Tooltip-popup", position])}>{props.renderContent()}</div>}
+      {visible && withPortal && <FloatingPortal>{tooltipContent}</FloatingPortal>}
+      {visible && !withPortal && tooltipContent}
     </span>
   );
 }
